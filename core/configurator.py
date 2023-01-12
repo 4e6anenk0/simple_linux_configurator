@@ -8,5 +8,10 @@
 та у разі повторного запуску виконує лише ті команди, які не були виконані.
 '''
 
+from os import system
+
+
 class Configurator:
-    pass
+    def __init__(self) -> None:
+        self.system = system()
+        
