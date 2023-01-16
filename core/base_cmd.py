@@ -1,21 +1,22 @@
 import getpass
+from functools import wraps
 import subprocess
 import shlex
 
 
 class BaseCmd:
     def __init__(self):
-        self.output_exec = None
+        self.outputs = {}
+        self.errors = {}
 
-    def _subprocess_handler(self, result: subprocess.Popen[bytes]):
+    def _postprocess_handler(self, procces: subprocess.Popen[bytes]):
         # повертає typle[bytes, bytes] з виводом та помилками, попередньо обробив результати
-        output, error = result.communicate()
-
+        output, error = procces.communicate()
         if output:
             print(
-                f"All done! Returned code is: {result.returncode}")
+                f"All done! Returned code is: {procces.returncode}")
         if error:
-            print(f"Returned code is: {result.returncode}")
+            print(f"Returned code is: {procces.returncode}")
             print(f"Error: {error.decode('utf-8').strip()}")
 
         return output, error
@@ -82,16 +83,33 @@ class BaseCmd:
                  ):
         return subprocess.Popen(
             shlex.split(cmd),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.PIPE
+            stdout=stdout,
+            stderr=stderr,
+            stdin=stdin
         )
 
+    def postprocess(func):
+        @wraps(func)
+        def wraper(*args, **kwargs):
+            self = args[0]
+            procces = func(*args, **kwargs)
+            output, error = self._postprocess_handler(procces)
+            self.outputs[f'{procces}']
+            return procces 
+        return wraper
+
     def run(self, cmd: str, password=None, root=False):
-        result = self._cmd(cmd, password, root)
-        output, error = self._subprocess_handler(result=result)
-        self.output_exec = output.decode('utf-8')
-        print(self.output_exec)
+        procces = self._cmd(cmd, password, root)
+        output, error = self._postprocess_handler(procces=procces)
+        self.output = output.decode('utf-8')
+        print(self.output)
+
+    def decode(self, procces: subprocess.Popen[bytes], format = 'utf-8'):
+        # Вихід результату виконання команд, можна передати для декодування у цю функцію
+        output = procces.stdout.read().decode(f'{format}')
+        error = procces.stderr.read().decode(f'{format}')
+
+        return output, error
 
     def chained_run(self, *cmds: str, password=None, root=False):
         temporal_proc = self._cmd(cmds[0], password, root)
