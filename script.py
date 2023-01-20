@@ -10,14 +10,20 @@ system.apply(config)
 
 from core.base_cmd import BaseCmd
 from core.system_prefix import System
+from core.settings import settings
 
-system = System()
+#system = System()
+settings.init()
+print(settings.localization['lang'])
 
-cmd = BaseCmd()
+
+#cmd = BaseCmd()
 #cmd.run('ls -a /')
 #cmd.root.run('cp -rf /usr/share/themes/. /home/$USER/test', password='7991')
-cmd.run('ls -l', password='7991', root=True)
-cmd.run('ls -l')
+#cmd.run('ls -l', password='7991', root=True)
+#cmd.run('ls -l')
+
+
 
 """ 
 

@@ -11,6 +11,7 @@ class BaseCmd:
 
     def _postprocess_handler(self, procces: subprocess.Popen[bytes]):
         # повертає typle[bytes, bytes] з виводом та помилками, попередньо обробив результати
+        
         output, error = procces.communicate()
         if output:
             print(
@@ -87,7 +88,7 @@ class BaseCmd:
             stderr=stderr,
             stdin=stdin
         )
-
+    
     def postprocess(func):
         @wraps(func)
         def wraper(*args, **kwargs):
