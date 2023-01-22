@@ -14,14 +14,33 @@ from core.settings import settings
 
 #system = System()
 settings.init()
-print(settings.localization['lang'])
+#print(settings.localization['lang'])
 
 
-#cmd = BaseCmd()
+cmd = BaseCmd()
 #cmd.run('ls -a /')
 #cmd.root.run('cp -rf /usr/share/themes/. /home/$USER/test', password='7991')
 #cmd.run('ls -l', password='7991', root=True)
 #cmd.run('ls -l')
+""" result = cmd.run('lb -a /')
+output, error = cmd.decode(result)
+print(f'Errors: {error}, Outputs: {output}') """
+""" result = cmd.root_run('lb -a /', password='7991')
+#print(result.stdout.decode('utf-8'))
+output, error = cmd.decode(result)
+print(f'Errors: {error}, Outputs: {output}') """
+
+result = cmd.root_run('lb -a /', password='7991', shell=True)
+output, error = cmd.decode(result)
+print(f'Errors: {error}, Outputs: {output}')
+
+
+
+
+#cmd.a_run('ls -a /', password='7991')
+
+#cmd.shellroot_run_cmd('ls -a /', password='7991')
+
 
 
 

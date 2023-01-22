@@ -8,10 +8,29 @@
 та у разі повторного запуску виконує лише ті команди, які не були виконані.
 '''
 
-from os import system
+from core.system_prefix import System
+from core.settings import settings
+from core.base_cmd import BaseCmd
 
 
 class Configurator:
     def __init__(self) -> None:
-        self.system = system()
+        settings.init()
+        self.system = System()
+        self.commands = []
         
+    def run(self):
+        self.commands.append()
+
+    def sudo(self):
+        
+        
+        return self 
+
+    def install():
+        pass
+
+    def main_loop(self):
+        for cmd in self.commands:
+            cmd()
+

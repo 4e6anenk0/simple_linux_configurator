@@ -1,29 +1,18 @@
 import getpass
 from functools import wraps
+from core import log
 import subprocess
 import shlex
 
+logger = log.get_logger(__name__)
 
 class BaseCmd:
     def __init__(self):
         self.outputs = {}
         self.errors = {}
 
-    def _postprocess_handler(self, procces: subprocess.Popen[bytes]):
-        # повертає typle[bytes, bytes] з виводом та помилками, попередньо обробив результати
-        
-        output, error = procces.communicate()
-        if output:
-            print(
-                f"All done! Returned code is: {procces.returncode}")
-        if error:
-            print(f"Returned code is: {procces.returncode}")
-            print(f"Error: {error.decode('utf-8').strip()}")
-
-        return output, error
-
     def _check_has_password(self, password):
-        if password:
+        if password and password != '':
             return True
         else:
             return False
@@ -35,10 +24,6 @@ class BaseCmd:
                            stderr=subprocess.PIPE,
                            stdin=subprocess.PIPE
                            ):
-        
-        if not self._check_has_password(password):
-            print('Password is empty!')
-            return
         
         sudo_cmd = ['sh', '-c',
                     f'echo {password} | sudo -S {cmd}']
@@ -55,26 +40,23 @@ class BaseCmd:
                       password: str,
                       stdout=subprocess.PIPE,
                       stderr=subprocess.PIPE,
+                      stdin=subprocess.PIPE
                       ):
-        def get_sudo_str(cmd: str):
-            sudo_cmd = ['sudo', '-S']
-            cmd = shlex.split(cmd)
-            sudo_cmd.extend(cmd)
-            return sudo_cmd
+        sudo_cmd = ['sudo', '-S']
+        cmd = shlex.split(cmd)
+        sudo_cmd.extend(cmd)
 
-        if not self._check_has_password(password):
-            print('Password is empty!')
-            return
-        
-        sub_proc = subprocess.Popen(
-            ['echo', password], stdout=subprocess.PIPE)
-        
-        return subprocess.Popen(
-            get_sudo_str(cmd),
+        p = subprocess.Popen(
+            sudo_cmd,
             stdout=stdout,
             stderr=stderr,
-            stdin=sub_proc.stdout
+            stdin=stdin
         )
+
+        p.stdin.write(f'{password}\n'.encode('utf-8'))
+        p.stdin.flush()
+
+        return p
 
     def run_cmd(self,
                  cmd: str,
@@ -88,27 +70,72 @@ class BaseCmd:
             stderr=stderr,
             stdin=stdin
         )
-    
-    def postprocess(func):
-        @wraps(func)
-        def wraper(*args, **kwargs):
-            self = args[0]
-            procces = func(*args, **kwargs)
-            output, error = self._postprocess_handler(procces)
-            self.outputs[f'{procces}']
-            return procces 
-        return wraper
 
-    def run(self, cmd: str, password=None, root=False):
-        procces = self._cmd(cmd, password, root)
-        output, error = self._postprocess_handler(procces=procces)
-        self.output = output.decode('utf-8')
-        print(self.output)
+    def _process_runner_handler(self, cmd: str, process: subprocess.Popen[bytes]):
+        """ with process:
+            errs = []
+            for line in iter(process.stderr.readline, b''):
+                logger.error(
+                    f'Command: {cmd} - Error: {line.decode().rstrip()}')
+                errs.append(line) """
+        returncode = process.wait()
+        stdout, stderr = process.communicate()
+        
+        if returncode != 0:
+            logger.error(f'Return code is not 0. Error: {stderr.decode("utf-8")}')
+        
+        result = subprocess.CompletedProcess(
+            cmd, returncode, stdout, stderr)
 
-    def decode(self, procces: subprocess.Popen[bytes], format = 'utf-8'):
+        return result
+
+    def run(self, cmd: str):
+        try:
+            process = self.run_cmd(cmd)
+            return self._process_runner_handler(cmd, process)
+        except OSError:
+            logger.error(
+                f'Process cannot be created and transferred to [_process_runner_handler]. Command: {cmd}')
+        
+    def root_run(self, cmd: str, password: str, shell: bool = False):
+        if self._check_has_password(password) == False:
+            logger.info('Password is empty!')
+            return
+        
+        if shell == False:
+            try:
+                process = self.root_run_cmd(cmd, password)
+                return self._process_runner_handler(cmd, process)
+            except OSError:
+                logger.error(
+                    f'Process cannot be created and transferred to [_process_runner_handler]. Command: {cmd}')
+        else:
+            try:
+                process = self.shellroot_run_cmd(cmd, password)
+                return self._process_runner_handler(cmd, process)
+            except OSError:
+                logger.error(
+                    f'Process cannot be created and transferred to [_process_runner_handler]. Command: {cmd}')
+
+
+    def decode_process(self, process: subprocess.Popen[bytes], format = 'utf-8'):
         # Вихід результату виконання команд, можна передати для декодування у цю функцію
-        output = procces.stdout.read().decode(f'{format}')
-        error = procces.stderr.read().decode(f'{format}')
+        output = process.stdout.read().decode(f'{format}')
+        error = process.stderr.read().decode(f'{format}')
+
+        return output, error
+
+    def decode(self, result: subprocess.CompletedProcess[bytes]):
+        output = ''
+        error = ''
+
+        if result == None:
+            return output, error
+
+        if result.stdout:
+            output = result.stdout.decode('utf-8')
+        if result.stderr:
+            error = result.stderr.decode('utf-8')
 
         return output, error
 

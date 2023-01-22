@@ -29,9 +29,9 @@ class Settings:
     def __init__(self):
         # root_path - папка з проєектом
         self.root_path = PosixPath(__file__).parent.parent
-        self.log_path = self.root_path.joinpath('logs')
+        self.log_path = self.root_path.joinpath('logs/logs.txt')
         self.path_to_ini_file = self.root_path.joinpath('settings.ini')
-        # settings:
+        # settings from ini:
         self.logging = {'level': Levels.debug.value}
         self.localization = {'lang': Langs.english.value}
         
@@ -81,6 +81,13 @@ class Settings:
             default_ini.write(f)
         
         return True
+    
+    def check_and_create_logs_file(self):
+        if PosixPath(self.log_path).is_file:
+            return
+        else:
+            #create logs file
+            PosixPath.touch(self.log_path)
 
     
     def init(self) -> bool:
@@ -89,6 +96,8 @@ class Settings:
         параметрам вказаним у файлі налаштувань. Важливо, щоб файл був створений відповідно до шаблону. 
         Для цього можна скористуватись функцією [generate_default_ini]
         '''
+
+        # Initializing from a file settings.ini
         if PosixPath(self.path_to_ini_file).is_file:
             parserINI = configparser.ConfigParser()
             
@@ -114,6 +123,9 @@ class Settings:
             print("Configuration file not created. It will be created...")
             self.generate_default_ini()
             self.init("Initialization again...")
+
+        # other init scripts
+        self.check_and_create_logs_file()
 
         return True
 
