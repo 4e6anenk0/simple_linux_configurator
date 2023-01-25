@@ -10,27 +10,42 @@
 
 from core.system_prefix import System
 from core.settings import settings
-from core.base_cmd import BaseCmd
+from core.commands import *
 
 
 class Configurator:
-    def __init__(self) -> None:
+    def __init__(self):
         settings.init()
+        self.settings = settings
         self.system = System()
-        self.commands = []
-        
-    def run(self):
-        self.commands.append()
+        self.commands = [BaseCmd]
+        self.install_descriptor = 'default'
+        self.sudo_descriptor = False
 
+    def run(self, cmd: str):
+        if self.sudo_descriptor == False:
+            self.commands.append(Run(cmd))
+        else:
+            self.commands.append(RootRun(cmd, self.system))
+        self.sudo_descriptor = True
+
+    """ def install(self, app_id):
+        if self.install_descriptor == 'default':
+            self.commands.append(InstallCmd(app_id))
+        elif self.install_descriptor == 'flatpak':
+            self.commands.append(InstallCmd(app_id, self.install_descriptor)) """
+
+    @property
     def sudo(self):
-        
-        
-        return self 
+        self.sudo_descriptor = True
+
+        return self
 
     def install():
         pass
 
-    def main_loop(self):
+    def apply(self):
         for cmd in self.commands:
-            cmd()
+            cmd.apply()
+        logger.info('Configuration completed!!!')
 

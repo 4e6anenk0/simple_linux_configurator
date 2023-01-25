@@ -35,6 +35,7 @@ class Settings:
         self.logging = {'level': Levels.debug.value}
         self.localization = {'lang': Langs.english.value}
         
+    @staticmethod
     def get_section(section) -> dict:
         '''
         get_section - функція для прямого отримання налаштувань з файлу за конкретною секцією

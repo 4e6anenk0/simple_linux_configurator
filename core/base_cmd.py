@@ -1,15 +1,11 @@
-import getpass
-from functools import wraps
 from core import log
 import subprocess
 import shlex
 
 logger = log.get_logger(__name__)
 
+
 class BaseCmd:
-    def __init__(self):
-        self.outputs = {}
-        self.errors = {}
 
     def _check_has_password(self, password):
         if password and password != '':
@@ -71,7 +67,7 @@ class BaseCmd:
             stdin=stdin
         )
 
-    def _process_runner_handler(self, cmd: str, process: subprocess.Popen[bytes]):
+    def _process_runner_handler(self, cmd: str, process: subprocess.Popen[bytes]) -> subprocess.CompletedProcess[bytes]:
         """ with process:
             errs = []
             for line in iter(process.stderr.readline, b''):
@@ -89,7 +85,7 @@ class BaseCmd:
 
         return result
 
-    def run(self, cmd: str):
+    def run(self, cmd: str) -> subprocess.CompletedProcess[bytes]:
         try:
             process = self.run_cmd(cmd)
             return self._process_runner_handler(cmd, process)
@@ -97,7 +93,7 @@ class BaseCmd:
             logger.error(
                 f'Process cannot be created and transferred to [_process_runner_handler]. Command: {cmd}')
         
-    def root_run(self, cmd: str, password: str, shell: bool = False):
+    def root_run(self, cmd: str, password: str, shell: bool = False) -> subprocess.CompletedProcess[bytes]:
         if self._check_has_password(password) == False:
             logger.info('Password is empty!')
             return
@@ -126,16 +122,18 @@ class BaseCmd:
         return output, error
 
     def decode(self, result: subprocess.CompletedProcess[bytes]):
-        output = ''
-        error = ''
+        output = None
+        error = None
 
         if result == None:
             return output, error
 
         if result.stdout:
             output = result.stdout.decode('utf-8')
+        
         if result.stderr:
             error = result.stderr.decode('utf-8')
+        
 
         return output, error
 
@@ -143,3 +141,6 @@ class BaseCmd:
         temporal_proc = self._cmd(cmds[0], password, root)
         for i in range(len(cmds) - 1):
             temporal_proc = self._cmd(cmds[i + 1], password, root)
+
+    def apply():
+        pass
