@@ -113,7 +113,10 @@ class BaseCmd:
 
         try:
             process = self.run_cmd(cmd)
-            return self._process_runner_handler(cmd, process)
+            completed = self._process_runner_handler(cmd, process)
+            if completed.stderr and completed.returncode != 0:
+                raise Exception()
+            return completed
         except OSError:
             logger.error(
                 f'Process cannot be created and transferred to [_process_runner_handler]. Command: {cmd}')
@@ -125,15 +128,21 @@ class BaseCmd:
         
         if shell == False:
             try:
-                process = self.root_run_cmd(cmd, password)
-                return self._process_runner_handler(cmd, process)
+                process = self.root_run_cmd(cmd, password) 
+                completed = self._process_runner_handler(cmd, process)
+                if completed.stderr and completed.returncode != 0:
+                    raise Exception()
+                return completed
             except OSError:
                 logger.error(
                     f'Process cannot be created and transferred to [_process_runner_handler]. Command: {cmd}')
         else:
             try:
                 process = self.shellroot_run_cmd(cmd, password)
-                return self._process_runner_handler(cmd, process)
+                completed = self._process_runner_handler(cmd, process)
+                if completed.stderr and completed.returncode != 0:
+                    raise Exception()
+                return completed
             except OSError:
                 logger.error(
                     f'Process cannot be created and transferred to [_process_runner_handler]. Command: {cmd}')

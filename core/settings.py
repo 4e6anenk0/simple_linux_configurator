@@ -11,6 +11,7 @@ class Sections(Enum):
     '''
     logging = 'Logging'
     localization = 'Localization'
+    project = 'Project'
 
 class Levels(Enum):
     notset = 'NOTSET'
@@ -25,15 +26,23 @@ class Langs(Enum):
     russian = 'rus'
     english = 'eng'
 
+class Modes(Enum):
+    '''
+    Use [dev] setting for verbose console output, use [prod] setting for compact console output
+    '''
+    dev = 'dev'
+    prod = 'prod'
+
 class Settings:
     def __init__(self):
         # root_path - папка з проєектом
         self.root_path = PosixPath(__file__).parent.parent
         self.log_path = self.root_path.joinpath('logs/logs.txt')
         self.path_to_ini_file = self.root_path.joinpath('settings.ini')
-        # settings from ini:
+        # default settings:
         self.logging = {'level': Levels.debug.value}
         self.localization = {'lang': Langs.english.value}
+        self.project = {'mode': Modes.dev.value}
         
     @staticmethod
     def get_section(section) -> dict:
@@ -131,3 +140,4 @@ class Settings:
         return True
 
 settings = Settings()
+settings.init()

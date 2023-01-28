@@ -8,25 +8,27 @@
 та у разі повторного запуску виконує лише ті команди, які не були виконані.
 '''
 
-from core.system_prefix import System
+from core.system import BaseSystem, FakeSystem, System
 from core.settings import settings
 from core.commands import *
-
+from core.utils.enums import DE, Systems as sys
 
 class Configurator:
-    def __init__(self):
-        settings.init()
+    def __init__(self, system: BaseSystem = None):
         self.settings = settings
-        self.system = System()
-        self.commands = [BaseCmd]
+        if system:
+            self.system = system
+        else:
+            self.system = System()
+        self.configuration = [BaseCmd]
         self.install_descriptor = 'default'
         self.sudo_descriptor = False
 
     def run(self, cmd: str):
         if self.sudo_descriptor == False:
-            self.commands.append(Run(cmd))
+            self.configuration.append(Run(cmd))
         else:
-            self.commands.append(RootRun(cmd, self.system))
+            self.configuration.append(RootRun(cmd, self.system))
         self.sudo_descriptor = True
 
     """ def install(self, app_id):
@@ -44,8 +46,18 @@ class Configurator:
     def install():
         pass
 
+    def ubuntu(self, de: str = DE.generic):
+        os_name = sys.ubuntu
+        if self.system.os_name == os_name:
+            self.__setattr__(os_name, Configurator())
+        else:
+            fake_os = FakeSystem(os_name)
+            self.__setattr__(os_name, Configurator())
+
+    def print_pkg_manager(self):
+        print(self.system.manager)
+
     def apply(self):
-        for cmd in self.commands:
+        for cmd in self.configuration:
             cmd.apply()
         logger.info('Configuration completed!!!')
-
