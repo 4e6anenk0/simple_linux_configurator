@@ -124,7 +124,7 @@ class FakeSystem(BaseSystem):
     def __init__(self, os_name: str, de: str = DE.generic, envs: dict[str, str] = {}):
         self.__envs = envs
         
-        super().__init__(os_name, FakeSystem, de)
+        super().__init__(os_name, 'FakeSystem', de)
 
     def get_env(self, key: str):
         try:

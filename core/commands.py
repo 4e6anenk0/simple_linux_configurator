@@ -35,8 +35,8 @@ class TemplateMixin:
 
 class Run(BaseCmd, TemplateMixin):
     def __init__(self, cmd: str, silent: bool = False):
-        self.cmd = cmd
         self.silent_install = silent
+        super().__init__(cmd)
 
     def run_implementation(self):
         
@@ -55,9 +55,9 @@ class Run(BaseCmd, TemplateMixin):
 
 class RootRun(BaseCmd, TemplateMixin):
     def __init__(self, cmd: str, system: BaseSystem, silent: bool = False):
-        self.cmd = cmd
         self.system = system
         self.silent_install = silent
+        super().__init__(cmd)
 
     def run_implementation(self):
         password = self.system.password
@@ -77,8 +77,8 @@ class Install(BaseCmd, TemplateMixin):
     def __init__(self, app_id: str, system: BaseSystem):
         self.system = system
         self.manager = system.manager
-        self.cmd = self.manager.install(app_id)
         self.app_id = app_id
+        super().__init__(self.manager.install(app_id))
         
     def run_implementation(self):
         password = self.system.password

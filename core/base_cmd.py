@@ -26,6 +26,15 @@ class ValidatedCmd:
         pass
 
 class BaseCmd:
+    def __init__(self, cmd: str = None):
+        self.__cmd = cmd
+
+    @property
+    def cmd(self):
+        return self.__cmd
+
+    def __str__(self) -> str:
+        return self.cmd
 
     def _check_has_password(self, password):
         if password and password != '':
@@ -105,6 +114,14 @@ class BaseCmd:
 
         return result
 
+    def _check_error(completed: subprocess.CompletedProcess[bytes]):
+        if completed.stderr and completed.returncode != 0:
+            logger.error(
+                f"Error execution of command: {completed.stderr.decode('utf-8')}")
+            raise Exception()
+        else:
+            return
+
     def run(self, cmd: str) -> subprocess.CompletedProcess[bytes]:
         """ if isinstance(cmd, ValidatedCmd) == False:
             logger.warning(
@@ -115,7 +132,9 @@ class BaseCmd:
             process = self.run_cmd(cmd)
             completed = self._process_runner_handler(cmd, process)
             if completed.stderr and completed.returncode != 0:
+                logger.error(f"Error execution of command: {completed.stderr.decode('utf-8')}")
                 raise Exception()
+            """ self._check_error(completed) """
             return completed
         except OSError:
             logger.error(
@@ -132,6 +151,7 @@ class BaseCmd:
                 completed = self._process_runner_handler(cmd, process)
                 if completed.stderr and completed.returncode != 0:
                     raise Exception()
+                """ self._check_error(completed) """
                 return completed
             except OSError:
                 logger.error(
@@ -142,6 +162,7 @@ class BaseCmd:
                 completed = self._process_runner_handler(cmd, process)
                 if completed.stderr and completed.returncode != 0:
                     raise Exception()
+                """ self._check_error(completed) """
                 return completed
             except OSError:
                 logger.error(
