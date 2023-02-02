@@ -80,7 +80,7 @@ class Flatpak(UniversalManager):
         return cmd
     
     def update(self) -> str:
-        cmd = f"{self.base} update"
+        cmd = f"{self.base} update {self.assume}"
         return cmd
 
     def add_repo():

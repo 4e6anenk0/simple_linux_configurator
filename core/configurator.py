@@ -15,7 +15,7 @@ from core.utils.enums import DE, Systems as sys
 from core.pkg_managers.managers import Flatpak, Snap
 
 class BaseConfigurator:
-    def __init__(self, system: BaseSystem = None):
+    def __init__(self, system: BaseSystem = None, name: str = "base_configurator"):
         if system:
             self.__system = system
         else:
@@ -24,6 +24,7 @@ class BaseConfigurator:
         self.__configuration: list[BaseCmd] = []
         self.__configurators: list[BaseConfigurator] = []
         self.__sudo_descriptor = False
+        self.__name = name
 
     def __str__(self) -> str:
         if self.configuration:
@@ -33,6 +34,17 @@ class BaseConfigurator:
 
     def add_configurator(self, configurator):
         self.__configurators.append(configurator)
+
+    def register_configurator(self, configurator):
+        if configurator in self.configurators:
+            return configurator
+        else:
+            self.add_configurator(configurator)
+            return configurator
+
+    @property
+    def name(self):
+        return self.__name
         
     @property
     def system(self):
@@ -130,13 +142,48 @@ class BaseConfigurator:
             return configuration
         else:
             return configuration
+
+    def _check(self, os_name: str = None, de: str = None, target: bool = None) -> bool:
+        check = True
+        if os_name:
+            if self.system.os_name == os_name:
+                check = True
+            else:
+                return False
+        if de:
+            if self.system.de == de:
+                check = True
+            else:
+                return False
+        if target: 
+            if self.system.target == target:
+                check = True
+            else:
+                return False
+        return check
+
+    def extract_configs(self, os_name: str = None, de: str = None, target: bool = None):
+        configuration = []
+        if self._check(os_name, de, target) == True:
+            if self.configuration:
+                configuration.extend(self.configuration)
+        
+        if self.configurators:
+            for cnf in self.__configurators:
+                if cnf._check(os_name, de, target) == True:
+                    configuration.extend(
+                        cnf.extract_configs(os_name, de, target))
+            return configuration
+        else:
+            return configuration
         
 class SnapConfigurator(BaseConfigurator):
+
     pass
 
 class FlatpakConfigurator(BaseConfigurator):
     def __init__(self, system: BaseSystem = None):
-        super().__init__(system)
+        super().__init__(system, 'flatpak_configurator')
         self.__manager = Flatpak()
         self.__provider = ManagerProvider(system, self.__manager) # провайдер, который по запросу позволяет собирать команды с нужным пакетным менеджером
 
@@ -147,22 +194,20 @@ class FlatpakConfigurator(BaseConfigurator):
         self.configuration.append(self.__provider.remove(app_id))
 
     def update(self):
-        self.configuration.append(self.__provider)
+        self.configuration.append(self.__provider.update())
 
     def add_repo(self):
         self.configuration.append(self.__provider.cmd(self.__manager.add_repo()))
 
-    """ def remove(self, app_id: str):
-        self.configuration.append(Manager) """
-
 
 class UbuntuConfigurator(BaseConfigurator):
     def __init__(self, system: BaseSystem = None):
-        super().__init__(system)
+        super().__init__(system, 'ubuntu_configurator')
 
     @property
     def gnome(self):
         self.system.de = DE.gnome
+        return self
 
     @property
     def kde(self):
@@ -173,19 +218,16 @@ class UbuntuConfigurator(BaseConfigurator):
 
 class Configurator(BaseConfigurator):
     def __init__(self, system: BaseSystem = None):
-        super().__init__(system)
+        super().__init__(system, 'main_configurator')
         self.settings = settingsObj
         self.__provider = ManagerProvider(self.system)
-        """ self.flatpak_configurator = FlatpakConfigurator(system=self.system)
-        self.snap_configurator = SnapConfigurator(system=self.system) """
         self.flatpak_configurator: FlatpakConfigurator = None
         self.snap_configurator: SnapConfigurator = None
         self.ubuntu_configurator: UbuntuConfigurator = None
-        """ self.add_configurator(self.flatpak)
-        self.add_configurator(self.snap) """
+     
+    
 
-
-    @property
+    """ @property
     def flatpak(self):
         if self.flatpak_configurator:
             if self.flatpak_configurator in self.configurators:
@@ -193,6 +235,15 @@ class Configurator(BaseConfigurator):
             else:
                 self.add_configurator(self.flatpak_configurator) # поздняя инициализация конфигуратора, если он необходим
                 return self.flatpak_configurator
+        else:
+            self.flatpak_configurator = FlatpakConfigurator(self.system)
+            return self.flatpak """
+
+    @property
+    def flatpak(self):
+        if self.flatpak_configurator:
+            configurator = self.register_configurator(self.flatpak_configurator)
+            return configurator
         else:
             self.flatpak_configurator = FlatpakConfigurator(self.system)
             return self.flatpak
@@ -204,12 +255,6 @@ class Configurator(BaseConfigurator):
             self.configuration.append(RootRun(cmd, self.system))
         self.sudo_descriptor = True
 
-    """ def install(self, app_id):
-        if self.install_descriptor == 'default':
-            self.commands.append(InstallCmd(app_id))
-        elif self.install_descriptor == 'flatpak':
-            self.commands.append(InstallCmd(app_id, self.install_descriptor)) """
-
     def install(self, app_id: str):
         self.configuration.append(self.__provider.install(app_id))
 
@@ -219,32 +264,21 @@ class Configurator(BaseConfigurator):
     def update(self):
         self.configuration.append(self.__provider.update())
 
-    def install():
-        pass
-
     @property
     def ubuntu(self):
         os_name = sys.ubuntu
         if self.system.os_name == os_name:
             
             if self.ubuntu_configurator:
-                if self.ubuntu_configurator in self.configurators:
-                    return self.ubuntu_configurator
-                else:
-                    # поздняя инициализация конфигуратора, если он необходим
-                    self.add_configurator(self.ubuntu_configurator)
-                    return self.ubuntu_configurator
+                configurator = self.register_configurator(self.ubuntu_configurator)
+                return configurator
             else:
                 self.ubuntu_configurator = UbuntuConfigurator(self.system)
                 return self.ubuntu
         else:
             if self.ubuntu_configurator:
-                if self.ubuntu_configurator in self.configurators:
-                    return self.ubuntu_configurator
-                else:
-                    # поздняя инициализация конфигуратора, если он необходим
-                    self.add_configurator(self.ubuntu_configurator)
-                    return self.ubuntu_configurator
+                configurator = self.register_configurator(self.ubuntu_configurator)
+                return configurator
             else:
                 self.ubuntu_configurator = UbuntuConfigurator(FakeSystem(os_name))
                 return self.ubuntu

@@ -11,7 +11,7 @@ system.apply(config)
 '''
 
 from core.base_cmd import BaseCmd
-from core.configurator import Configurator
+from core.configurator import BaseConfigurator, Configurator
 from core.pkg_managers.managers import Pacman
 from core.system import FakeSystem
 from core.utils.enums import Systems, PKGManagers, DE
@@ -39,26 +39,42 @@ print(f'Errors: {error}, Outputs: {output}') """
 output, error = cmd.decode(result)
 print(f'Errors: {error}, Outputs: {output}') 
  """
-fake_sys = FakeSystem(os_name=Systems.ubuntu, de=DE.gnome)
+
+
+#fake_sys = FakeSystem(os_name=Systems.ubuntu, de=DE.gnome)
 cnf = Configurator()
 #print(cnf.system)
 #cnf.run('ls -a /')
 cnf.flatpak.install('org.gabmus.hydrapaper')
 cnf.flatpak.remove('org.gabmus.hydrapaper')
-cnf.ubuntu.test('TEST!')
-#cnf.flatpak.install('org.gabmus.hydrapaper')
+cnf.ubuntu.gnome.test('TEST!')
+cnf.flatpak.install('org.gabmus.hydrapaper')
+cnf.flatpak.update()
 #cnf.run('ls -a /')
 #cnf.sudo.run('ls -a /')
-cnf.update_configuration()
-print(cnf)
+""" cnf.update_configuration()
+print(cnf) """
+configuration = cnf.extract_configs(os_name=Systems.manjaro, de=DE.gnome)
+
+for el in configuration:
+    print(el)
+
 #print(cnf.system.de)
+
+
+
 
 #cnf.manager
 
 
+
+
+
+
+
+
+
 #cnf.apply() 
-
-
 
 #cmd.a_run('ls -a /', password='7991')
 #cmd.shellroot_run_cmd('ls -a /', password='7991')
