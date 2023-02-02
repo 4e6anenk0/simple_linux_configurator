@@ -139,5 +139,5 @@ class Settings:
 
         return True
 
-settings = Settings()
-settings.init()
+settingsObj = Settings()
+settingsObj.init()

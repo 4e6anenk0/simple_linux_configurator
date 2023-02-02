@@ -12,7 +12,9 @@ system.apply(config)
 
 from core.base_cmd import BaseCmd
 from core.configurator import Configurator
+from core.pkg_managers.managers import Pacman
 from core.system import FakeSystem
+from core.utils.enums import Systems, PKGManagers, DE
 
 
 #system = System()
@@ -37,15 +39,24 @@ print(f'Errors: {error}, Outputs: {output}') """
 output, error = cmd.decode(result)
 print(f'Errors: {error}, Outputs: {output}') 
  """
-#fake_sys = FakeSystem(os_name='nixos', de='GNOME')
+fake_sys = FakeSystem(os_name=Systems.ubuntu, de=DE.gnome)
 cnf = Configurator()
 #print(cnf.system)
-cnf.run('ls -a /')
+#cnf.run('ls -a /')
+cnf.flatpak.install('org.gabmus.hydrapaper')
+cnf.flatpak.remove('org.gabmus.hydrapaper')
+cnf.ubuntu.test('TEST!')
+#cnf.flatpak.install('org.gabmus.hydrapaper')
 #cnf.run('ls -a /')
 #cnf.sudo.run('ls -a /')
+cnf.update_configuration()
 print(cnf)
 #print(cnf.system.de)
-cnf.apply() 
+
+#cnf.manager
+
+
+#cnf.apply() 
 
 
 
@@ -63,11 +74,21 @@ cnf.ubuntu.install()
 cnf.ubuntu.snap.instal()
 cnf.restart()
 cnf.flatpak.install('package_id')
+cnf.flatpak.chain('aaa').chain('aaa').cmd
+cnf.flatpak(args).install(args, app)
 cnf.snap.install('package')
 cnf.add_extension('extension_url')
 cnf.add_env(key = key, value = value)
 cnf.apply()
 
+
+cnf.flatpak.install('package_id')
+
+cnf.ubuntu.snap.install(p)
+cnf.fedora.flatpak.install(p)
+
+sudo snap install p
+sudo flatpak install p
 
 
 """

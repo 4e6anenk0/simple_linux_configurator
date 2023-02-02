@@ -26,11 +26,11 @@ class ValidatedCmd:
         pass
 
 class BaseCmd:
-    def __init__(self, cmd: str = None):
+    def __init__(self, cmd: str):
         self.__cmd = cmd
 
     @property
-    def cmd(self):
+    def cmd(self) -> str:
         return self.__cmd
 
     def __str__(self) -> str:
@@ -97,12 +97,12 @@ class BaseCmd:
         )
 
     def _process_runner_handler(self, cmd: str, process: subprocess.Popen[bytes]) -> subprocess.CompletedProcess[bytes]:
-        """ with process:
+        '''with process:
             errs = []
             for line in iter(process.stderr.readline, b''):
                 logger.error(
                     f'Command: {cmd} - Error: {line.decode().rstrip()}')
-                errs.append(line) """
+                errs.append(line)'''
         returncode = process.wait()
         stdout, stderr = process.communicate()
         
@@ -113,6 +113,27 @@ class BaseCmd:
             cmd, returncode, stdout, stderr)
 
         return result
+
+    """ def _process_runner_handler(self, cmd: str, process: subprocess.Popen[bytes]) -> subprocess.CompletedProcess[bytes]:
+        
+        with process:
+            out = bytearray()
+            for line in iter(process.stdout.readline, b''):
+                logger.info(
+                    f'Command: {cmd}: {line.decode().rstrip()}')
+                out.append(line)
+
+        process.wait()
+        _, stderr = process.communicate()
+
+        if process.returncode != 0:
+            logger.error(
+                f'Return code is not 0. Error: {stderr.decode("utf-8")}')
+
+        result = subprocess.CompletedProcess(
+            cmd, process.returncode, bytes(out), stderr)
+
+        return result """
 
     def _check_error(completed: subprocess.CompletedProcess[bytes]):
         if completed.stderr and completed.returncode != 0:

@@ -13,18 +13,23 @@ import getpass
 import os
 from core import log
 from core.pkg_managers.manager_provider import *
-from core.pkg_managers.universal_manager import UniversalManager
+from core.pkg_managers.managers import UniversalManager
 from core.utils.enums import DE
 
 logger = log.get_logger(__name__)
 
 
 class BaseSystem:
-    def __init__(self, os_name: str, os_pretty_name: str, de: str, manager: UniversalManager = None):
+    def __init__(self, os_name: str, os_pretty_name: str, de: str, manager: UniversalManager = None, target: bool = False):
         self.__os_name = os_name
         self.__os_pretty_name = os_pretty_name
         self.__de = de
         self.__manager = manager
+        self.__target = target
+
+    @property
+    def target(self):
+        return self.__target
 
     @property
     def os_pretty_name(self):
@@ -37,6 +42,10 @@ class BaseSystem:
     @property
     def de(self):
         return self.__de
+
+    @de.setter
+    def de(self, de: str):
+        self.__de = de
 
     def _try_get_pkg_manager(self):
         try:
@@ -75,7 +84,7 @@ class System(BaseSystem):
         system_os_pretty_name = self.__os_release.get('PRETTY_NAME')
         system_de = self.__envs['XDG_CURRENT_DESKTOP']
         
-        super().__init__(system_os_name, system_os_pretty_name, system_de)
+        super().__init__(system_os_name, system_os_pretty_name, system_de, target=True)
 
     @property
     def password(self):
@@ -119,6 +128,7 @@ class System(BaseSystem):
     def set_env(self, key: str, value: str):
         pass
 
+systemObj = System()
 
 class FakeSystem(BaseSystem):
     def __init__(self, os_name: str, de: str = DE.generic, envs: dict[str, str] = {}):
