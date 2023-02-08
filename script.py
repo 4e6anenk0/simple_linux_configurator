@@ -10,15 +10,19 @@ system = System()
 system.apply(config)
 '''
 
+from pathlib import Path
 from core.base_cmd import BaseCmd
 from core.configurator import BaseConfigurator, Configurator
-from core.pkg_managers.managers import Pacman
+from core.pkg_managers.flatpak import Flatpak
 from core.system import FakeSystem
 from core.utils.enums import Systems, PKGManagers, DE
-
+from core.settings import settingsObj, init_settings
 
 #system = System()
 """ settings.init() """
+""" settingsObj.init() """
+""" init_settings() """
+
 #print(settings.localization['lang'])
 
 
@@ -40,18 +44,29 @@ output, error = cmd.decode(result)
 print(f'Errors: {error}, Outputs: {output}') 
  """
 
+'''
+Для того чтобы передать набор опций в конфигурацию, необходимо обратиться к пакетному менеджеру
+и классу уоманды и выбрать опцию:
+Manager.Operation.option(args)
+'''
+
+
 
 #fake_sys = FakeSystem(os_name=Systems.ubuntu, de=DE.gnome)
 cnf = Configurator()
 #print(cnf.system)
 #cnf.run('ls -a /')
-cnf.flatpak.install('org.gabmus.hydrapaper')
-cnf.flatpak.remove('org.gabmus.hydrapaper')
-cnf.ubuntu.gnome.test('TEST!')
-cnf.flatpak.install('org.gabmus.hydrapaper')
+cnf.flatpak.install('org.gabmus.hydrapaper', [Flatpak.Install.subpath(Path('/usr/bin/')), Flatpak.Install.user()])
+cnf.flatpak.remove('org.gabmus.hydrapaper', [Flatpak.Uninstall.user()])
 cnf.flatpak.update()
+cnf.flatpak.add_repo('flathub', 'https://flathub.org/repo/flathub.flatpakrepo')
+""" cnf.flatpak.remove('org.gabmus.hydrapaper')
+cnf.ubuntu.gnome.test('TEST!') """
+cnf.flatpak.install('org.gabmus.hydrapaper')
+""" cnf.flatpak.update() """
 #cnf.run('ls -a /')
 #cnf.sudo.run('ls -a /')
+
 """ cnf.update_configuration()
 print(cnf) """
 configuration = cnf.extract_configs(os_name=Systems.manjaro, de=DE.gnome)
@@ -64,15 +79,10 @@ for el in configuration:
 
 
 
+
+
+
 #cnf.manager
-
-
-
-
-
-
-
-
 
 #cnf.apply() 
 

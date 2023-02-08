@@ -1,4 +1,4 @@
-from core.pkg_managers.managers import ManagerOperation
+from core.utils.cli_elements import Option
 from core.pkg_managers.managers import UniversalManager
 from .base_cmd import BaseCmd
 from core.system import BaseSystem, System
@@ -182,23 +182,24 @@ class ManagerProvider:
         self.system = system
         self.silent = silent
         
-    def install(self, app_id: str) -> ManagerCmd:
-        cmd = self.__manager.install(app_id)
+    def install(self, app_id: str, options: list[Option] = None) -> ManagerCmd:
+        #cmd = self.__manager.install().get_cmd(app_id, options)
+        cmd = self.__manager.install(app_id, options)
         #cmd = self.__manager.install(app_id)
         pre_msg = f'Trying to install the program: {app_id}'
         err_msg = f'The {app_id} failed to install!'
         return ManagerCmd(cmd, self.system, pre_msg, err_msg, self.silent)
 
-    def remove(self, app_id: str) -> ManagerCmd:
+    def remove(self, app_id: str, options: list[Option] = None) -> ManagerCmd:
         #cmd = self.__manager.remove(app_id)
-        cmd = self.__manager.remove(app_id)
+        cmd = self.__manager.remove(app_id, options=options)
         pre_msg = f'Trying to remove the program: {app_id}'
         err_msg = f'The {app_id} failed to remove!'
         return ManagerCmd(cmd, self.system, pre_msg, err_msg, self.silent)
 
-    def update(self) -> ManagerCmd:
+    def update(self, options: list[Option] = None) -> ManagerCmd:
         #cmd = self.__manager.update()
-        cmd = self.__manager.update()
+        cmd = self.__manager.update(options=options)
         pre_msg = f'Trying to update apps...'
         err_msg = f'The failed to update!'
         return ManagerCmd(cmd, self.system, pre_msg, err_msg, self.silent)

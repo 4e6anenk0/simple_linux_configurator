@@ -33,6 +33,17 @@ class Modes(Enum):
     dev = 'dev'
     prod = 'prod'
 
+class EqualBetweenParams(Enum):
+    '''Use to globally determine whether to use "=" between parameters. If [True] then "=" will be used'''
+    true = 'True'
+    false = 'False'
+
+
+class CompactCommands(Enum):
+    '''Use to globally determine whether to use "=" between parameters. If [True] then "=" will be used'''
+    true = 'True'
+    false = 'False'
+
 class Settings:
     def __init__(self):
         # root_path - папка з проєектом
@@ -40,9 +51,11 @@ class Settings:
         self.log_path = self.root_path.joinpath('logs/logs.txt')
         self.path_to_ini_file = self.root_path.joinpath('settings.ini')
         # default settings:
-        self.logging = {'level': Levels.debug.value}
-        self.localization = {'lang': Langs.english.value}
-        self.project = {'mode': Modes.dev.value}
+        self.logging = {'level' : Levels.debug.value}
+        self.localization = {'lang' : Langs.english.value}
+        self.project = {'mode' : Modes.dev.value,
+                        'equal' : EqualBetweenParams.false.value,
+                        'use_compact_commands' : CompactCommands.false.value}
         
     @staticmethod
     def get_section(section) -> dict:
@@ -116,15 +129,14 @@ class Settings:
                 
                 for section in Sections:
                     atr = dict(getattr(self, section.name))
-                    
-                    for key in atr:   
+                    for key in atr:
                         try: 
                             new_value = parserINI.get(section.value, key)
+                            atr[key] = new_value
                         except:
-                            print(f"Failed to get value from INI file! Section: [{section.value}] - key: {key}")
                             return False
                         
-                        setattr(self, section.name, {key : new_value})
+                        setattr(self, section.name, atr)
                         
             except:
                 print('Init Error!')
@@ -139,5 +151,11 @@ class Settings:
 
         return True
 
+
+
 settingsObj = Settings()
-settingsObj.init()
+#settingsObj.init()
+
+
+def init_settings():
+    settingsObj.init()

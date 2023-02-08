@@ -12,7 +12,8 @@ from core.system import BaseSystem, FakeSystem, systemObj
 from core.settings import settingsObj
 from core.commands import *
 from core.utils.enums import DE, Systems as sys
-from core.pkg_managers.managers import Flatpak, Snap
+from core.pkg_managers.flatpak import Flatpak
+from core.utils.cli_elements import Option
 
 class BaseConfigurator:
     def __init__(self, system: BaseSystem = None, name: str = "base_configurator"):
@@ -184,20 +185,23 @@ class SnapConfigurator(BaseConfigurator):
 class FlatpakConfigurator(BaseConfigurator):
     def __init__(self, system: BaseSystem = None):
         super().__init__(system, 'flatpak_configurator')
-        self.__manager = Flatpak()
+        self.__manager = Flatpak
         self.__provider = ManagerProvider(system, self.__manager) # провайдер, который по запросу позволяет собирать команды с нужным пакетным менеджером
 
-    def install(self, app_id: str):
-        self.configuration.append(self.__provider.install(app_id))
+    def install(self, app_id: str, options: list[Option] = None):
+        self.configuration.append(self.__provider.install(app_id, options))
     
-    def remove(self, app_id: str):
-        self.configuration.append(self.__provider.remove(app_id))
+    def remove(self, app_id: str, options: list[Option] = None):
+        self.configuration.append(self.__provider.remove(app_id, options))
 
-    def update(self):
-        self.configuration.append(self.__provider.update())
+    def update(self, options: list[Option] = None):
+        self.configuration.append(self.__provider.update(options=options))
 
-    def add_repo(self):
-        self.configuration.append(self.__provider.cmd(self.__manager.add_repo()))
+    def add_repo(self, name: str, location: str, options: list[Option] = None):
+        cmd = self.__manager.remote_add(name=name, location=location, options=options)
+        pre_msg = f'Trying to add a repository {name}'
+        err_msg = 'Failed to add repository'
+        self.configuration.append(self.__provider.cmd(cmd, pre_msg, err_msg))
 
 
 class UbuntuConfigurator(BaseConfigurator):
@@ -224,20 +228,6 @@ class Configurator(BaseConfigurator):
         self.flatpak_configurator: FlatpakConfigurator = None
         self.snap_configurator: SnapConfigurator = None
         self.ubuntu_configurator: UbuntuConfigurator = None
-     
-    
-
-    """ @property
-    def flatpak(self):
-        if self.flatpak_configurator:
-            if self.flatpak_configurator in self.configurators:
-                return self.flatpak_configurator
-            else:
-                self.add_configurator(self.flatpak_configurator) # поздняя инициализация конфигуратора, если он необходим
-                return self.flatpak_configurator
-        else:
-            self.flatpak_configurator = FlatpakConfigurator(self.system)
-            return self.flatpak """
 
     @property
     def flatpak(self):

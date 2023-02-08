@@ -5,9 +5,9 @@ from core.settings import settingsObj
 def _get_cli_log_format():
     detail_log_format = f"%(asctime)s - [%(levelname)s] - %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - %(message)s"
     minimal_log_format = f"%(asctime)s    [%(levelname)s] - %(message)s"
-    if settingsObj.project['mode'] == 'dev':
+    if settingsObj.project.get('mode') == 'dev':
         return detail_log_format
-    elif settingsObj.project['mode'] == 'prod':
+    elif settingsObj.project.get('mode') == 'prod':
         return minimal_log_format
     else:
         print('Perhaps the wrong attribute is set in the settings!')

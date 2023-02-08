@@ -1,40 +1,21 @@
 from pathlib import Path
+from core import log
+from core.utils.cli_elements import Operation, Option
 from core.utils.enums import PKGManagers as pkgm
 
 
-
-
-class ManagerOperation:
-    def __init__(self, base: str, operation: str, alias: str = None, default_options: str = None, ending: str = None) -> None:
-        self.base = base
-        self.operation = operation
-        self.alias = alias
-        self.default_options = default_options
-        self.ending = ending
-        self._builded_cmd: list[str] = []
-        self._builded_cmd.append(base)
-        self._builded_cmd.append(operation)
-        self._builded_cmd.append(default_options)
-    
-    def get(self) -> str:
-        cmd = " ".join(self._builded_cmd)
-        return cmd
-
-    def __str__(self) -> str:
-        return self.base + self.operation
-        
-
 class UniversalManager:
-    def __init__(self) -> None:
-        self.name = ''
 
-    def install(self, app_id: str) -> str:
+    @classmethod
+    def install(cls, argument: str = None, options: list[Option] = None) -> str:
         pass
 
-    def remove(self, app_id: str) -> str:
+    @classmethod
+    def remove(cls, argument: str = None, options: list[Option] = None) -> str:
         pass
 
-    def update(self) -> str:
+    @classmethod
+    def update(cls, argument: str = None, options: list[Option] = None) -> str:
         pass
 
 class Pacman(UniversalManager):
@@ -65,29 +46,4 @@ class Snap(UniversalManager):
     pass
 
 
-class Flatpak(UniversalManager):
-    def __init__(self):
-        self.base = pkgm.flatpak
-        self.storage = 'flathub'
-        self.assume = '-y --noninteractive'
 
-    def install(self, app_id: str) -> str:
-        cmd = f"{self.base} install {self.assume} {app_id}"
-        return cmd
-
-    def remove(self, app_id: str) -> str:
-        cmd = f"{self.base} uninstall {self.assume} {app_id}"
-        return cmd
-    
-    def update(self) -> str:
-        cmd = f"{self.base} update {self.assume}"
-        return cmd
-
-    def add_repo():
-        pass
-
-    def delete_repo():
-        pass
-
-    def __str__(self) -> str:
-        return self.__class__.__name__
