@@ -33,14 +33,14 @@ class BaseConfigurator:
         else:
             return "Empty configuration list!"
 
-    def add_configurator(self, configurator):
+    def _add_configurator(self, configurator):
         self.__configurators.append(configurator)
 
-    def register_configurator(self, configurator):
+    def _register_configurator(self, configurator):
         if configurator in self.configurators:
             return configurator
         else:
-            self.add_configurator(configurator)
+            self._add_configurator(configurator)
             return configurator
 
     @property
@@ -70,7 +70,6 @@ class BaseConfigurator:
     @property
     def sudo(self):
         self.sudo_descriptor = True
-
         return self
 
     @sudo_descriptor.setter
@@ -83,22 +82,22 @@ class BaseConfigurator:
             logger.warning(
                 'Cannot execute apply method on non-target machine. Use code generation instead')
             return
-        self.update_configuration()
+        self._update_configuration()
         for cmd in self.configuration:
             cmd.apply()
 
-    def update_configuration(self):
+    def _update_configuration(self):
         '''
         Метод для обновления верхнеуровневого конфигуратора коммандами, хранимыми во вложенных конфигураторах
         '''
         try: 
-            configuration = self.extract_target_configs()
+            configuration = self._extract_target_configs()
             self.configuration = configuration
         except:
             logger.error('Failed to update configuration')
 
         
-    def extract_all_configs(self) -> list[BaseCmd]:
+    def _extract_all_configs(self) -> list[BaseCmd]:
         '''
         Метод для рекурсивного обхода всех вложенных конфигураторов и извлечения всех хранимых внутри них комманд
         '''
@@ -107,12 +106,12 @@ class BaseConfigurator:
             configuration.extend(self.configuration)
         if self.__configurators:
             for cnf in self.__configurators:
-                configuration.extend(cnf.extract_all_configs())
+                configuration.extend(cnf._extract_all_configs())
             return configuration
         else:
             return configuration
 
-    def extract_target_configs(self) -> list[BaseCmd]:
+    def _extract_target_configs(self) -> list[BaseCmd]:
         '''
         Метод для рекурсивного обхода всех вложенных конфигураторов и извлечения целевых (предназначеных для рабочей ОС) хранимых внутри них комманд
         '''
@@ -123,12 +122,12 @@ class BaseConfigurator:
         if self.__configurators:
             for cnf in self.__configurators:
                 if cnf.system.target == True:
-                    configuration.extend(cnf.extract_all_configs())
+                    configuration.extend(cnf._extract_target_configs())
             return configuration
         else:
             return configuration
 
-    def extract_specific_configs(self, os_name: str) -> list[BaseCmd]:
+    def _extract_specific_configs(self, os_name: str) -> list[BaseCmd]:
         '''
         Метод для рекурсивного обхода всех вложенных конфигураторов и извлечения хранимых внутри них комманд предназначенных для конкретной ОС
         '''
@@ -139,7 +138,7 @@ class BaseConfigurator:
         if self.__configurators:
             for cnf in self.__configurators:
                 if cnf.system.os_name == os_name:
-                    configuration.extend(cnf.extract_all_configs())
+                    configuration.extend(cnf._extract_specific_configs())
             return configuration
         else:
             return configuration
@@ -163,7 +162,7 @@ class BaseConfigurator:
                 return False
         return check
 
-    def extract_configs(self, os_name: str = None, de: str = None, target: bool = None):
+    def _extract_configs(self, os_name: str = None, de: str = None, target: bool = None):
         configuration = []
         if self._check(os_name, de, target) == True:
             if self.configuration:
@@ -173,7 +172,7 @@ class BaseConfigurator:
             for cnf in self.__configurators:
                 if cnf._check(os_name, de, target) == True:
                     configuration.extend(
-                        cnf.extract_configs(os_name, de, target))
+                        cnf._extract_configs(os_name, de, target))
             return configuration
         else:
             return configuration
@@ -185,23 +184,33 @@ class SnapConfigurator(BaseConfigurator):
 class FlatpakConfigurator(BaseConfigurator):
     def __init__(self, system: BaseSystem = None):
         super().__init__(system, 'flatpak_configurator')
-        self.__manager = Flatpak
-        self.__provider = ManagerProvider(system, self.__manager) # провайдер, который по запросу позволяет собирать команды с нужным пакетным менеджером
+        self.__provider = ManagerProvider(self.system, Flatpak) # провайдер, который по запросу позволяет собирать команды с нужным пакетным менеджером
 
     def install(self, app_id: str, options: list[Option] = None):
         self.configuration.append(self.__provider.install(app_id, options))
-    
+
     def remove(self, app_id: str, options: list[Option] = None):
         self.configuration.append(self.__provider.remove(app_id, options))
 
-    def update(self, options: list[Option] = None):
-        self.configuration.append(self.__provider.update(options=options))
+    def update(self, app_id: str = None, options: list[Option] = None):
+        self.configuration.append(self.__provider.update(app_id, options))
 
     def add_repo(self, name: str, location: str, options: list[Option] = None):
-        cmd = self.__manager.remote_add(name=name, location=location, options=options)
-        pre_msg = f'Trying to add a repository {name}'
-        err_msg = 'Failed to add repository'
-        self.configuration.append(self.__provider.cmd(cmd, pre_msg, err_msg))
+        args_str = self.__provider.prepare(name, location)
+        self.configuration.append(self.__provider.add_repo(args_str, options))
+
+    def remove_repo(self, name: str, options: list[Option] = None):
+        self.configuration.append(self.__provider.remove_repo(name, options))
+
+    def purge(self, app_id: str, options: list[Option] = None):
+        self.configuration.append(self.__provider.purge(app_id, options))
+
+    def add_cmd(self, operation: Operation, options: list[Option] = None, arg: str = None):
+        if operation.parent_label == 'flatpak':
+            self.configuration.append(operation.get_cmd(arg, options))
+        else:
+            logger.error(
+                f"The command could not be added to the configuration because the parent label does not match the target configurator! Should be 'flatpak' but given {operation.parent_label}")
 
 
 class UbuntuConfigurator(BaseConfigurator):
@@ -216,6 +225,7 @@ class UbuntuConfigurator(BaseConfigurator):
     @property
     def kde(self):
         self.system.de = DE.kde
+        return self
 
     def test(self, test_str: str):
         self.configuration.append(Run(test_str, self.system))
@@ -224,18 +234,19 @@ class Configurator(BaseConfigurator):
     def __init__(self, system: BaseSystem = None):
         super().__init__(system, 'main_configurator')
         self.settings = settingsObj
+        #self.__cmd_provider = CmdProvider(system)
         self.__provider = ManagerProvider(self.system)
-        self.flatpak_configurator: FlatpakConfigurator = None
-        self.snap_configurator: SnapConfigurator = None
-        self.ubuntu_configurator: UbuntuConfigurator = None
+        self._flatpak_configurator: FlatpakConfigurator = None
+        self._snap_configurator: SnapConfigurator = None
+        self._ubuntu_configurator: UbuntuConfigurator = None
 
     @property
     def flatpak(self):
-        if self.flatpak_configurator:
-            configurator = self.register_configurator(self.flatpak_configurator)
+        if self._flatpak_configurator:
+            configurator = self._register_configurator(self._flatpak_configurator)
             return configurator
         else:
-            self.flatpak_configurator = FlatpakConfigurator(self.system)
+            self._flatpak_configurator = FlatpakConfigurator(self.system)
             return self.flatpak
 
     def run(self, cmd: str):
@@ -245,32 +256,37 @@ class Configurator(BaseConfigurator):
             self.configuration.append(RootRun(cmd, self.system))
         self.sudo_descriptor = True
 
-    def install(self, app_id: str):
-        self.configuration.append(self.__provider.install(app_id))
+    def install(self, app_id: str, options: list[Option] = None):
+        self.configuration.append(self.__provider.install(app_id, options))
 
-    def remove(self, app_id: str):
-        self.configuration.append(self.__provider.remove(app_id))
+    def remove(self, app_id: str, options: list[Option] = None):
+        self.configuration.append(self.__provider.remove(app_id, options))
 
-    def update(self):
-        self.configuration.append(self.__provider.update())
+    def update(self, app_id: str = None, options: list[Option] = None):
+        self.configuration.append(self.__provider.update(app_id, options))
+
+    def purge(self, app_id: str = None, options: list[Option] = None):
+        self.configuration.append(self.__provider.purge(app_id, options))
+
+    
 
     @property
     def ubuntu(self):
         os_name = sys.ubuntu
         if self.system.os_name == os_name:
             
-            if self.ubuntu_configurator:
-                configurator = self.register_configurator(self.ubuntu_configurator)
+            if self._ubuntu_configurator:
+                configurator = self._register_configurator(self._ubuntu_configurator)
                 return configurator
             else:
-                self.ubuntu_configurator = UbuntuConfigurator(self.system)
+                self._ubuntu_configurator = UbuntuConfigurator(self.system)
                 return self.ubuntu
         else:
-            if self.ubuntu_configurator:
-                configurator = self.register_configurator(self.ubuntu_configurator)
+            if self._ubuntu_configurator:
+                configurator = self._register_configurator(self._ubuntu_configurator)
                 return configurator
             else:
-                self.ubuntu_configurator = UbuntuConfigurator(FakeSystem(os_name))
+                self._ubuntu_configurator = UbuntuConfigurator(FakeSystem(os_name))
                 return self.ubuntu
 
     def print_pkg_manager(self):

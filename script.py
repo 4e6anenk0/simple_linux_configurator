@@ -60,6 +60,9 @@ cnf.flatpak.install('org.gabmus.hydrapaper', [Flatpak.Install.subpath(Path('/usr
 cnf.flatpak.remove('org.gabmus.hydrapaper', [Flatpak.Uninstall.user()])
 cnf.flatpak.update()
 cnf.flatpak.add_repo('flathub', 'https://flathub.org/repo/flathub.flatpakrepo')
+cnf.flatpak.remove_repo('flathub')
+cnf.flatpak.purge('org.gabmus.hydrapaper')
+cnf.flatpak.add_cmd(Flatpak.Config(), [Flatpak.Config.user()])
 """ cnf.flatpak.remove('org.gabmus.hydrapaper')
 cnf.ubuntu.gnome.test('TEST!') """
 cnf.flatpak.install('org.gabmus.hydrapaper')
@@ -67,19 +70,15 @@ cnf.flatpak.install('org.gabmus.hydrapaper')
 #cnf.run('ls -a /')
 #cnf.sudo.run('ls -a /')
 
+
 """ cnf.update_configuration()
 print(cnf) """
-configuration = cnf.extract_configs(os_name=Systems.manjaro, de=DE.gnome)
+configuration = cnf._extract_configs(os_name=Systems.manjaro, de=DE.gnome)
 
 for el in configuration:
     print(el)
 
 #print(cnf.system.de)
-
-
-
-
-
 
 
 #cnf.manager

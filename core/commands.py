@@ -1,4 +1,4 @@
-from core.utils.cli_elements import Option
+from core.utils.cli_elements import Operation, Option
 from core.pkg_managers.managers import UniversalManager
 from .base_cmd import BaseCmd
 from core.system import BaseSystem, System
@@ -149,7 +149,7 @@ class TemplateForProviderMixin:
             return
         logger.info('Success!')
 
-class ManagerCmd(BaseCmd, TemplateForProviderMixin):
+class ProvidedCmd(BaseCmd, TemplateForProviderMixin):
     def __init__(self, cmd: str, system: BaseSystem, pre: str, err: str, silent: bool = False):
         self.pre = pre
         self.err = err
@@ -173,39 +173,78 @@ class ManagerCmd(BaseCmd, TemplateForProviderMixin):
     def apply(self):
         self.template(pre=self.pre, err=self.err)
 
-class ManagerProvider:
+
+class BaseProvider:
+    def __init__(self, system: BaseSystem, silent: bool = False) -> None:
+        self._system = system
+        self._silent = silent
+
+    @classmethod
+    def prepare(cls, *params: str) -> str:
+        '''A method that allows concatenate arguments into a common string'''
+        list_par = [arg for arg in params]
+        str_par = " ".join(list_par)
+        return str_par
+
+    def new_cmd(self, cmd: str, pre_msg: str, err_msg: str) -> ProvidedCmd:
+        return ProvidedCmd(cmd, self._system, pre_msg, err_msg, self._silent)
+        
+
+class ManagerProvider(BaseProvider):
     def __init__(self, system: BaseSystem, manager: UniversalManager = None, silent: bool = False) -> None:
+        super().__init__(system, silent)
         if not manager:
             self.__manager = system.manager
         else:
             self.__manager = manager
-        self.system = system
-        self.silent = silent
-        
-    def install(self, app_id: str, options: list[Option] = None) -> ManagerCmd:
-        #cmd = self.__manager.install().get_cmd(app_id, options)
-        cmd = self.__manager.install(app_id, options)
-        #cmd = self.__manager.install(app_id)
-        pre_msg = f'Trying to install the program: {app_id}'
-        err_msg = f'The {app_id} failed to install!'
-        return ManagerCmd(cmd, self.system, pre_msg, err_msg, self.silent)
 
-    def remove(self, app_id: str, options: list[Option] = None) -> ManagerCmd:
-        #cmd = self.__manager.remove(app_id)
-        cmd = self.__manager.remove(app_id, options=options)
-        pre_msg = f'Trying to remove the program: {app_id}'
-        err_msg = f'The {app_id} failed to remove!'
-        return ManagerCmd(cmd, self.system, pre_msg, err_msg, self.silent)
+    @property
+    def manager(self):
+        return self.__manager
 
-    def update(self, options: list[Option] = None) -> ManagerCmd:
-        #cmd = self.__manager.update()
-        cmd = self.__manager.update(options=options)
+    def get_cmd(self, method_name: str, pre_msg: str, err_msg: str, arg: str = None, options: list[Option] = None) -> ProvidedCmd:
+        '''Allows get a command by named id from the required package manager'''
+        try:
+            method = getattr(self.__manager, method_name)
+            if callable(method):
+                cmd = method(arg, options)
+                return ProvidedCmd(cmd, self._system, pre_msg, err_msg, self._silent)
+        except:
+            raise Exception('Failed to get command with manager method!')
+
+    def install(self, arg: str, options: list[Option] = None):
+        pre_msg = f'Trying to install the program: {arg}'
+        err_msg = f'The {arg} failed to install!'
+        return self.get_cmd('install', pre_msg, err_msg, arg, options)
+
+    def remove(self, arg: str, options: list[Option] = None):
+        pre_msg = f'Trying to remove the program: {arg}'
+        err_msg = f'The {arg} failed to remove!'
+        return self.get_cmd('remove', pre_msg, err_msg, arg, options)
+
+    def update(self, arg: str = None, options: list[Option] = None):
         pre_msg = f'Trying to update apps...'
         err_msg = f'The failed to update!'
-        return ManagerCmd(cmd, self.system, pre_msg, err_msg, self.silent)
+        return self.get_cmd('update', pre_msg, err_msg, arg, options=options)
 
-    def cmd(self, cmd: str, pre_msg: str, err_msg: str) -> ManagerCmd:
-        return ManagerCmd(cmd, self.system, pre_msg, err_msg, self.silent)
+    def add_repo(self, arg: str, options: list[Option] = None):
+        pre_msg = f'Trying to add a repository {arg}'
+        err_msg = 'Failed to add repository'
+        return self.get_cmd('add_repo', pre_msg, err_msg, arg, options)
+
+    def remove_repo(self, arg: str, options: list[Option] = None):
+        pre_msg = f'Trying to remove a repository {arg}'
+        err_msg = 'Failed to remove repository'
+        return self.get_cmd('remove_repo', pre_msg, err_msg, arg, options)
+
+    def purge(self, arg: str, options: list[Option] = None):
+        pre_msg = f'Trying to purge the program: {arg}'
+        err_msg = f'The {arg} failed to purge!'
+        return self.get_cmd('purge', pre_msg, err_msg, arg, options)
+
+    
+
+
 
 """ class ManagerInstall(BaseCmd, TemplateForPkgManagerMixin):
     def __init__(self, app_id: str, system: BaseSystem, manager: UniversalManager = None, silent: bool = False):

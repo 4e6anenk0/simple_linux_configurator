@@ -9,6 +9,34 @@ logger = log.get_logger(__name__)
 class _FlatpakOptions:
 
     @classmethod
+    def version(cls, parent_operation: str) -> Option:
+        return Option('--version', parent_operation)
+
+    @classmethod
+    def default_arch(cls, parent_operation: str) -> Option:
+        return Option('--default-arch', parent_operation)
+
+    @classmethod
+    def supported_arches(cls, parent_operation: str) -> Option:
+        return Option('--supported-arches', parent_operation)
+    
+    @classmethod
+    def gl_drivers(cls, parent_operation: str) -> Option:
+        return Option('--gl-drivers', parent_operation)
+
+    @classmethod
+    def installations(cls, parent_operation: str) -> Option:
+        return Option('--installations', parent_operation)
+
+    @classmethod
+    def print_updated_env(cls, parent_operation: str) -> Option:
+        return Option('--print-updated-env', parent_operation)
+
+    @classmethod
+    def print_system_only(cls, parent_operation: str) -> Option:
+        return Option('--print-system-only', parent_operation)
+
+    @classmethod
     def user(cls, parent_operation: str) -> Option:
         return Option('--user', parent_operation, alias='-u')
 
@@ -976,6 +1004,7 @@ class _FlatpakOptions:
         
 
 class Flatpak(UniversalManager):
+    operation = 'flatpak'
 
     class Install(Operation):
         operation = 'install'
@@ -3752,27 +3781,84 @@ class Flatpak(UniversalManager):
             return _FlatpakOptions.ostree_verbose(cls.operation)
 
     @classmethod
-    def __prepare(cls, *params: str) -> str:
-        print(params)
-        list_par = [arg for arg in params]
-        print(list_par)
-        str_par = " ".join(list_par)
-        print(str_par)
-        return str_par
+    def version(cls) -> Option:
+        return _FlatpakOptions.version(cls.operation)
+    
+    @classmethod
+    def default_arch(cls) -> Option:
+        return _FlatpakOptions.default_arch(cls.operation)
+    
+    @classmethod
+    def supported_arches(cls) -> Option:
+        return _FlatpakOptions.supported_arches(cls.operation)
 
     @classmethod
-    def install(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
-        cmd = cls.Install().get_cmd(arg, options, head_options)
+    def gl_drivers(cls) -> Option:
+        return _FlatpakOptions.gl_drivers(cls.operation)
+
+    @classmethod
+    def installations(cls) -> Option:
+        return _FlatpakOptions.installations(cls.operation)
+
+    @classmethod
+    def print_updated_env(cls) -> Option:
+        return _FlatpakOptions.print_updated_env(cls.operation)
+
+    @classmethod
+    def print_system_only(cls) -> Option:
+        return _FlatpakOptions.print_system_only(cls.operation)
+
+    @classmethod
+    def verbose(cls) -> Option:
+        return _FlatpakOptions.verbose(cls.operation)
+    
+    @classmethod
+    def ostree_verbose(cls) -> Option:
+        return _FlatpakOptions.ostree_verbose(cls.operation)
+
+    @classmethod
+    def install(cls, arg: str, options: list[Option] = None) -> str:
+        # for UniversalManager
+        cmd = cls.Install().get_cmd(arg, options)
         return cmd
 
     @classmethod
-    def remove(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
-        cmd = cls.Uninstall().get_cmd(arg, options, head_options)
+    def remove(cls, arg: str, options: list[Option] = None) -> str:
+        #for UniversalManager
+        cmd = cls.uninstall(arg, options)
+        return cmd
+    
+    @classmethod
+    def uninstall(cls, arg: str, options: list[Option] = None) -> str:
+        cmd = cls.Uninstall().get_cmd(arg, options)
         return cmd
 
     @classmethod
     def update(cls, arg: str = None, options: list[Option] = None) -> str:
+        # for UniversalManager
         cmd = cls.Update().get_cmd(arg, options=options)
+        return cmd
+    
+    @classmethod
+    def add_repo(cls, arg: str, options: list[Option] = None) -> str:
+        #for UniversalManager
+        cmd = cls.RemoteAdd().get_cmd(arg, options)
+        return cmd
+    
+    @classmethod
+    def remove_repo(cls, arg: str, options: list[Option] = None) -> str:
+        #for UniversalManager
+        cmd = cls.RemoteDelete().get_cmd(arg, options)
+        return cmd
+
+    @classmethod
+    def purge(cls, arg: str, options: list[Option] = None) -> str:
+        # for UniversalManager
+        if options:
+            all_opt = [Flatpak.Uninstall.delete_data()].extend(options)
+        else:
+            all_opt = [Flatpak.Uninstall.delete_data()]
+        cmd = cls.uninstall(arg, all_opt)
         return cmd
 
     @classmethod
@@ -3811,9 +3897,12 @@ class Flatpak(UniversalManager):
         return cmd
     
     @classmethod
-    def create_usb(cls, mnt_path: str = None, ref: str = None, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(mnt_path, ref)
-        cmd = cls.CreateUSB().get_cmd(str_par, options=options)
+    def create_usb(cls, arg: str, options: list[Option] = None) -> str:
+        '''
+        Command: flatpak create-usb [OPTIONS...] MOUNT-PATH STORAGE [STORAGES...]. You must pass a string argument with parameters:
+        mount-path, storage, [storages]
+        '''
+        cmd = cls.CreateUSB().get_cmd(arg, options=options)
         return cmd
 
     @classmethod
@@ -3832,9 +3921,12 @@ class Flatpak(UniversalManager):
         return cmd
 
     @classmethod
-    def make_current(cls, app: str, branch: str, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(app, branch)
-        cmd = cls.MakeCurrent().get_cmd(str_par, options=options)
+    def make_current(cls, arg: str, options: list[Option] = None) -> str:
+        '''
+        Command: flatpak make-current [OPTIONS...] APP BRANCH. You must pass a string argument with parameters:
+        APP, BRANCH
+        '''
+        cmd = cls.MakeCurrent().get_cmd(arg, options=options)
         return cmd
 
     @classmethod
@@ -3888,21 +3980,30 @@ class Flatpak(UniversalManager):
         return cmd
     
     @classmethod
-    def permissions(cls, table: str = None, id_: str = None, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(table, id_)
-        cmd = cls.Permissions().get_cmd(str_par, options=options)
+    def permissions(cls, arg: str = None, options: list[Option] = None) -> str:
+        '''
+        Command: flatpak permissions [OPTIONS...] [TABLE] [ID]. You must pass a string argument with parameters:
+        [TABLE], [ID]
+        '''
+        cmd = cls.Permissions().get_cmd(arg, options=options)
         return cmd
     
     @classmethod
-    def permission_remove(cls, table: str, id_: str, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(table, id_)
-        cmd = cls.PermissionRemove().get_cmd(str_par, options=options)
+    def permission_remove(cls, arg: str, options: list[Option] = None) -> str:
+        '''
+        Command: flatpak permission-remove [OPTIONS...] TABLE ID [APP_ID]. You must pass a string argument with parameters:
+        TABLE, ID, [APP_ID]
+        '''
+        cmd = cls.PermissionRemove().get_cmd(arg, options=options)
         return cmd
 
     @classmethod
-    def permission_set(cls, table: str, id_: str, app_id: str, access: str = None, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(table, id_, app_id, access)
-        cmd = cls.PermissionSet().get_cmd(str_par, options=options)
+    def permission_set(cls, arg: str, options: list[Option] = None) -> str:
+        '''
+        Command: flatpak permission-set [OPTIONS...] TABLE ID APP_ID [ACCESS RIGHTS...]. You must pass a string argument with parameters:
+        TABLE, ID, APP_ID, [ACCESS RIGHTS...]
+        '''
+        cmd = cls.PermissionSet().get_cmd(arg, options=options)
         return cmd
     
     @classmethod
@@ -3921,84 +4022,96 @@ class Flatpak(UniversalManager):
         return cmd
 
     @classmethod
-    def remote_add(cls, name: str, location: str, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(name, location)
-        cmd = cls.RemoteAdd().get_cmd(str_par, options=options)
+    def remote_add(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        '''
+        Command: flatpak remote-add [OPTIONS...] NAME LOCATION. You must pass a string argument with parameters:
+        NAME, LOCATION
+        '''
+        cmd = cls.RemoteAdd().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def remote_modify(cls, name: str, options: list[Option] = None) -> str:
-        cmd = cls.RemoteModify().get_cmd(name, options=options)
+    def remote_modify(cls, name: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.RemoteModify().get_cmd(name, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def remote_delete(cls, name: str, options: list[Option] = None) -> str:
-        cmd = cls.RemoteDelete().get_cmd(name, options=options)
+    def remote_delete(cls, name: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.RemoteDelete().get_cmd(name, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def remote_ls(cls, storage_or_address: str, options: list[Option] = None) -> str:
-        cmd = cls.RemoteLs().get_cmd(storage_or_address, options=options)
+    def remote_ls(cls, storage_or_address: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.RemoteLs().get_cmd(storage_or_address, options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def remote_info(cls, storage: str, name: str, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(storage, name)
-        cmd = cls.RemoteInfo().get_cmd(str_par, options=options)
+    def remote_info(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        '''
+        Command: flatpak remote-info [OPTIONS...]  STORAGE NAME. You must pass a string argument with parameters:
+        STORAGE, NAME
+        '''
+        cmd = cls.RemoteInfo().get_cmd(arg, options=options, head_options=head_options)
         return cmd
     
-    def build(cls, dir_path: str, commands: list[str] = None, options: list[Option] = None) -> str:
-        ### ????
-        str_par = ' '
-        list_par = [dir_path]
-        list_par.extend(commands)
-        for el in list_par:
-            if el:
-                str_par.join(el)
-        cmd = cls.Build().get_cmd(str_par, options=options)
+    def build(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        '''
+        Command: flatpak build [OPTIONS...] DIR [COMMAND [OPTIONS...]]. You must pass a string argument with parameters:
+        DIR, [COMMAND [OPTIONS...]]
+        '''
+        cmd = cls.Build().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
-    def build_finish(cls, dir_path: str, options: list[Option] = None) -> str:
-        cmd = cls.BuildFinish().get_cmd(dir_path, options=options)
+    def build_finish(cls, dir_path: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.BuildFinish().get_cmd(dir_path, options=options, head_options=head_options)
         return cmd
 
-    def build_export(cls, location: str, dir_path: str, brunch: str = None, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(location, dir_path, brunch)
-        cmd = cls.BuildExport().get_cmd(str_par, options=options)
+    def build_export(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        '''
+        Command: flatpak build-export [OPTIONS...] LOCATION DIR [BRUNCH]. You must pass a string argument with parameters:
+        LOCATION, DIR, [BRUNCH]
+        '''
+        cmd = cls.BuildExport().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
-    def build_bundle(cls, location: str, file_name: str, name: str, brunch: str = None, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(location, file_name, name, brunch)
-        cmd = cls.BuildBundle().get_cmd(str_par, options=options)
+    def build_bundle(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        '''
+        Command: flatpak build-bundle [OPTIONS...] LOCATION FILE_NAME NAME [BRUNCH]. You must pass a string argument with parameters:
+        LOCATION, FILE_NAME, NAME, [BRUNCH]
+        '''
+        cmd = cls.BuildBundle().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
-    def build_import_bundle(cls, location: str, file_name: str, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(location, file_name)
-        cmd = cls.BuildImportBundle().get_cmd(str_par, options=options)
+    def build_import_bundle(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        '''
+        Command: flatpak build-import-bundle [OPTIONS...] LOCATION FILE_NAME. You must pass a string argument with parameters:
+        LOCATION, FILE_NAME
+        '''
+        cmd = cls.BuildImportBundle().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
-    def build_sign(cls, location: str, ids: list[str] = None, options: list[Option] = None) -> str:
-        #### ????
-        str_par = ' '
-        list_par = [location]
-        list_par.extend(ids)
-        for el in list_par:
-            if el:
-                str_par.join(el)
-        cmd = cls.BuildSign().get_cmd(str_par, options=options)
+    def build_sign(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        '''
+        Command: flatpak build-sign [OPTIONS...] LOCATION [ID [BRUNCH]]. You must pass a string argument with parameters:
+        LOCATION, [ID [BRUNCH]]
+        '''
+        cmd = cls.BuildSign().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
-    def build_update_repo(cls, location: str, options: list[Option] = None) -> str:
-        cmd = cls.BuildUpdateRepo().get_cmd(location, options=options)
+    def build_update_repo(cls, location: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.BuildUpdateRepo().get_cmd(location, options=options, head_options=head_options)
         return cmd
 
-    def build_commit_from(cls, dst_repo: str, dst_ref: str = None, options: list[Option] = None) -> str:
-        str_par = cls.__prepare(dst_repo, dst_ref)
-        cmd = cls.BuildCommitFrom().get_cmd(str_par, options=options)
+    def build_commit_from(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        '''
+        Command: flatpak build-commit-from [OPTIONS...] DST-REPO [DST-REF]. You must pass a string argument with parameters:
+        DST-REPO, [DST-REF]
+        '''
+        cmd = cls.BuildCommitFrom().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
-    def build_update_repo(cls, location: str, options: list[Option] = None) -> str:
-        cmd = cls.Repo().get_cmd(location, options=options)
+    def build_update_repo(cls, location: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Repo().get_cmd(location, options=options, head_options=head_options)
         return cmd
 
     def __str__(self) -> str:

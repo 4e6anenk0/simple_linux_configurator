@@ -77,8 +77,27 @@ class Operation:
             return []
         return represent_opt
 
+    def _is_target_option(self, option: Option):
+        if option.parent_operation == self.operation:
+            return True
+        else:
+            return False
+
+    def _validate_options(self, options: list[Option]):
+        if options:
+            for option in options:
+                if self._is_target_option(option) == False:
+                    logger.error(
+                        f"Probably the wrong options were passed. Invalid option: [{option.get()}], target operation: [{self.operation}]. For non-target options, it is impossible to get the correct command")
+                    raise Exception(
+                        "There is a non-valid item in the options list!")
+        else:
+            return
+
     def get_cmd(self, argument: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
         
+        self._validate_options(options)
+    
         represent_options = self._represent_options(options)
         represent_head_options = self._represent_options(head_options)
         
@@ -87,6 +106,7 @@ class Operation:
         build_cmd.append(self.operation)
         build_cmd.append(self.default_options)
         build_cmd.extend(represent_options)
+        
         if argument:
             build_cmd.append(str(argument))
 
