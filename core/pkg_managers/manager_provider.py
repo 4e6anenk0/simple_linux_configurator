@@ -1,5 +1,5 @@
 from enum import Enum
-from core.pkg_managers.managers import Pacman
+from core.pkg_managers.pacman import Pacman
 from core.utils.enums import PKGManagers as pkgm
 from core.utils.enums import Systems as sys
 

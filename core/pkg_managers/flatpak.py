@@ -3816,209 +3816,211 @@ class Flatpak(UniversalManager):
     def ostree_verbose(cls) -> Option:
         return _FlatpakOptions.ostree_verbose(cls.operation)
 
+    # ---------------------------------------------------------------
+
     @classmethod
-    def install(cls, arg: str, options: list[Option] = None) -> str:
+    def install(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         # for UniversalManager
-        cmd = cls.Install().get_cmd(arg, options)
+        cmd = cls.Install().get_cmd(arg, options, head_options)
         return cmd
 
     @classmethod
-    def remove(cls, arg: str, options: list[Option] = None) -> str:
+    def remove(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         #for UniversalManager
-        cmd = cls.uninstall(arg, options)
+        cmd = cls.uninstall(arg, options, head_options)
         return cmd
     
     @classmethod
-    def uninstall(cls, arg: str, options: list[Option] = None) -> str:
-        cmd = cls.Uninstall().get_cmd(arg, options)
+    def uninstall(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Uninstall().get_cmd(arg, options, head_options)
         return cmd
 
     @classmethod
-    def update(cls, arg: str = None, options: list[Option] = None) -> str:
+    def update(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
         # for UniversalManager
-        cmd = cls.Update().get_cmd(arg, options=options)
+        cmd = cls.Update().get_cmd(arg, options, head_options)
         return cmd
     
     @classmethod
-    def add_repo(cls, arg: str, options: list[Option] = None) -> str:
+    def add_repo(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         #for UniversalManager
-        cmd = cls.RemoteAdd().get_cmd(arg, options)
+        cmd = cls.RemoteAdd().get_cmd(arg, options, head_options)
         return cmd
     
     @classmethod
-    def remove_repo(cls, arg: str, options: list[Option] = None) -> str:
+    def remove_repo(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         #for UniversalManager
-        cmd = cls.RemoteDelete().get_cmd(arg, options)
+        cmd = cls.RemoteDelete().get_cmd(arg, options, head_options)
         return cmd
 
     @classmethod
-    def purge(cls, arg: str, options: list[Option] = None) -> str:
+    def purge(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         # for UniversalManager
         if options:
             all_opt = [Flatpak.Uninstall.delete_data()].extend(options)
         else:
             all_opt = [Flatpak.Uninstall.delete_data()]
-        cmd = cls.uninstall(arg, all_opt)
+        cmd = cls.uninstall(arg, all_opt, head_options=head_options)
         return cmd
 
     @classmethod
-    def mask(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Mask().get_cmd(arg, options=options)
+    def mask(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Mask().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def pin(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Pin().get_cmd(arg, options=options)
+    def pin(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Pin().get_cmd(arg, options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def list_(cls, options: list[Option] = None) -> str:
-        cmd = cls.List().get_cmd(options=options)
+    def list_(cls, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.List().get_cmd(options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def info(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Info().get_cmd(arg, options=options)
+    def info(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Info().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def history(cls, options: list[Option] = None) -> str:
-        cmd = cls.History().get_cmd(options=options)
+    def history(cls, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.History().get_cmd(options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def config(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Config().get_cmd(arg, options=options)
+    def config(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Config().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def repair(cls, options: list[Option] = None) -> str:
-        cmd = cls.Repair().get_cmd(options=options)
+    def repair(cls, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Repair().get_cmd(options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def create_usb(cls, arg: str, options: list[Option] = None) -> str:
+    def create_usb(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak create-usb [OPTIONS...] MOUNT-PATH STORAGE [STORAGES...]. You must pass a string argument with parameters:
         mount-path, storage, [storages]
         '''
-        cmd = cls.CreateUSB().get_cmd(arg, options=options)
+        cmd = cls.CreateUSB().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def search(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Search().get_cmd(arg, options=options)
+    def search(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Search().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def run(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Run().get_cmd(arg, options=options)
+    def run(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Run().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def override(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Override().get_cmd(arg, options=options)
+    def override(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Override().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def make_current(cls, arg: str, options: list[Option] = None) -> str:
+    def make_current(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak make-current [OPTIONS...] APP BRANCH. You must pass a string argument with parameters:
         APP, BRANCH
         '''
-        cmd = cls.MakeCurrent().get_cmd(arg, options=options)
+        cmd = cls.MakeCurrent().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def enter(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Enter().get_cmd(arg, options=options)
+    def enter(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Enter().get_cmd(arg, options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def enter(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Enter().get_cmd(arg, options=options)
+    def enter(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Enter().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def ps(cls, options: list[Option] = None) -> str:
-        cmd = cls.PS().get_cmd(options=options)
+    def ps(cls, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.PS().get_cmd(options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def kill(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Kill().get_cmd(arg, options=options)
+    def kill(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Kill().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def kill(cls, arg: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Kill().get_cmd(arg, options=options)
+    def kill(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Kill().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def documents(cls, id_: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Documents().get_cmd(id_, options=options)
+    def documents(cls, id_: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Documents().get_cmd(id_, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def documents(cls, id_: str = None, options: list[Option] = None) -> str:
-        cmd = cls.Documents().get_cmd(id_, options=options)
+    def documents(cls, id_: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Documents().get_cmd(id_, options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def document_export(cls, file_: str, options: list[Option] = None) -> str:
-        cmd = cls.DocumentExport().get_cmd(file_, options=options)
+    def document_export(cls, file_: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.DocumentExport().get_cmd(file_, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def document_unexport(cls, file_: str, options: list[Option] = None) -> str:
-        cmd = cls.DocumentUnexport().get_cmd(file_, options=options)
+    def document_unexport(cls, file_: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.DocumentUnexport().get_cmd(file_, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def document_info(cls, file_: str, options: list[Option] = None) -> str:
-        cmd = cls.DocumentInfo().get_cmd(file_, options=options)
+    def document_info(cls, file_: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.DocumentInfo().get_cmd(file_, options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def permissions(cls, arg: str = None, options: list[Option] = None) -> str:
+    def permissions(cls, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak permissions [OPTIONS...] [TABLE] [ID]. You must pass a string argument with parameters:
         [TABLE], [ID]
         '''
-        cmd = cls.Permissions().get_cmd(arg, options=options)
+        cmd = cls.Permissions().get_cmd(arg, options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def permission_remove(cls, arg: str, options: list[Option] = None) -> str:
+    def permission_remove(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak permission-remove [OPTIONS...] TABLE ID [APP_ID]. You must pass a string argument with parameters:
         TABLE, ID, [APP_ID]
         '''
-        cmd = cls.PermissionRemove().get_cmd(arg, options=options)
+        cmd = cls.PermissionRemove().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
     @classmethod
-    def permission_set(cls, arg: str, options: list[Option] = None) -> str:
+    def permission_set(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak permission-set [OPTIONS...] TABLE ID APP_ID [ACCESS RIGHTS...]. You must pass a string argument with parameters:
         TABLE, ID, APP_ID, [ACCESS RIGHTS...]
         '''
-        cmd = cls.PermissionSet().get_cmd(arg, options=options)
+        cmd = cls.PermissionSet().get_cmd(arg, options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def permission_show(cls, app_id: str, options: list[Option] = None) -> str:
-        cmd = cls.PermissionShow().get_cmd(app_id, options=options)
+    def permission_show(cls, app_id: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.PermissionShow().get_cmd(app_id, options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def permission_reset(cls, app_id: str, options: list[Option] = None) -> str:
-        cmd = cls.PermissionReset().get_cmd(app_id, options=options)
+    def permission_reset(cls, app_id: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.PermissionReset().get_cmd(app_id, options=options, head_options=head_options)
         return cmd
     
     @classmethod
-    def remotes(cls, options: list[Option] = None) -> str:
-        cmd = cls.Remotes().get_cmd(options=options)
+    def remotes(cls, options: list[Option] = None, head_options: list[Option] = None) -> str:
+        cmd = cls.Remotes().get_cmd(options=options, head_options=head_options)
         return cmd
 
     @classmethod
@@ -4054,6 +4056,7 @@ class Flatpak(UniversalManager):
         cmd = cls.RemoteInfo().get_cmd(arg, options=options, head_options=head_options)
         return cmd
     
+    @classmethod
     def build(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak build [OPTIONS...] DIR [COMMAND [OPTIONS...]]. You must pass a string argument with parameters:
@@ -4062,10 +4065,12 @@ class Flatpak(UniversalManager):
         cmd = cls.Build().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
+    @classmethod
     def build_finish(cls, dir_path: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         cmd = cls.BuildFinish().get_cmd(dir_path, options=options, head_options=head_options)
         return cmd
 
+    @classmethod
     def build_export(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak build-export [OPTIONS...] LOCATION DIR [BRUNCH]. You must pass a string argument with parameters:
@@ -4074,6 +4079,7 @@ class Flatpak(UniversalManager):
         cmd = cls.BuildExport().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
+    @classmethod
     def build_bundle(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak build-bundle [OPTIONS...] LOCATION FILE_NAME NAME [BRUNCH]. You must pass a string argument with parameters:
@@ -4082,6 +4088,7 @@ class Flatpak(UniversalManager):
         cmd = cls.BuildBundle().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
+    @classmethod
     def build_import_bundle(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak build-import-bundle [OPTIONS...] LOCATION FILE_NAME. You must pass a string argument with parameters:
@@ -4090,6 +4097,7 @@ class Flatpak(UniversalManager):
         cmd = cls.BuildImportBundle().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
+    @classmethod
     def build_sign(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak build-sign [OPTIONS...] LOCATION [ID [BRUNCH]]. You must pass a string argument with parameters:
@@ -4098,10 +4106,12 @@ class Flatpak(UniversalManager):
         cmd = cls.BuildSign().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
+    @classmethod    
     def build_update_repo(cls, location: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         cmd = cls.BuildUpdateRepo().get_cmd(location, options=options, head_options=head_options)
         return cmd
 
+    @classmethod
     def build_commit_from(cls, arg: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         '''
         Command: flatpak build-commit-from [OPTIONS...] DST-REPO [DST-REF]. You must pass a string argument with parameters:
@@ -4110,6 +4120,7 @@ class Flatpak(UniversalManager):
         cmd = cls.BuildCommitFrom().get_cmd(arg, options=options, head_options=head_options)
         return cmd
 
+    @classmethod
     def build_update_repo(cls, location: str, options: list[Option] = None, head_options: list[Option] = None) -> str:
         cmd = cls.Repo().get_cmd(location, options=options, head_options=head_options)
         return cmd

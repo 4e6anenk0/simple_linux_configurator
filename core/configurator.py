@@ -186,28 +186,35 @@ class FlatpakConfigurator(BaseConfigurator):
         super().__init__(system, 'flatpak_configurator')
         self.__provider = ManagerProvider(self.system, Flatpak) # провайдер, который по запросу позволяет собирать команды с нужным пакетным менеджером
 
-    def install(self, app_id: str, options: list[Option] = None):
-        self.configuration.append(self.__provider.install(app_id, options))
+    def install(self, app_id: str, options: list[Option] = None, head_options: list[Option] = None):
+        self.configuration.append(
+            self.__provider.install(app_id, options, head_options))
 
-    def remove(self, app_id: str, options: list[Option] = None):
-        self.configuration.append(self.__provider.remove(app_id, options))
+    def remove(self, app_id: str, options: list[Option] = None, head_options: list[Option] = None):
+        self.configuration.append(
+            self.__provider.remove(app_id, options, head_options))
 
-    def update(self, app_id: str = None, options: list[Option] = None):
-        self.configuration.append(self.__provider.update(app_id, options))
+    def update(self, app_id: str = None, options: list[Option] = None, head_options: list[Option] = None):
+        self.configuration.append(
+            self.__provider.update(app_id, options, head_options))
 
-    def add_repo(self, name: str, location: str, options: list[Option] = None):
+    def add_repo(self, name: str, location: str, options: list[Option] = None, head_options: list[Option] = None):
         args_str = self.__provider.prepare(name, location)
-        self.configuration.append(self.__provider.add_repo(args_str, options))
+        self.configuration.append(self.__provider.add_repo(
+            args_str, options, head_options))
 
-    def remove_repo(self, name: str, options: list[Option] = None):
-        self.configuration.append(self.__provider.remove_repo(name, options))
+    def remove_repo(self, name: str, options: list[Option] = None, head_options: list[Option] = None):
+        self.configuration.append(
+            self.__provider.remove_repo(name, options, head_options))
 
-    def purge(self, app_id: str, options: list[Option] = None):
-        self.configuration.append(self.__provider.purge(app_id, options))
+    def purge(self, app_id: str, options: list[Option] = None, head_options: list[Option] = None):
+        self.configuration.append(
+            self.__provider.purge(app_id, options, head_options))
 
-    def add_cmd(self, operation: Operation, options: list[Option] = None, arg: str = None):
+    def build_cmd(self, operation: Operation, options: list[Option] = None, arg: str = None, head_options: list[Option] = None):
         if operation.parent_label == 'flatpak':
-            self.configuration.append(operation.get_cmd(arg, options))
+            self.configuration.append(
+                operation.get_cmd(arg, options, head_options))
         else:
             logger.error(
                 f"The command could not be added to the configuration because the parent label does not match the target configurator! Should be 'flatpak' but given {operation.parent_label}")
@@ -231,6 +238,7 @@ class UbuntuConfigurator(BaseConfigurator):
         self.configuration.append(Run(test_str, self.system))
 
 class Configurator(BaseConfigurator):
+    '''Top-level configurator. Allows you to build a configuration based on a given set of nested configurators'''
     def __init__(self, system: BaseSystem = None):
         super().__init__(system, 'main_configurator')
         self.settings = settingsObj
@@ -256,17 +264,21 @@ class Configurator(BaseConfigurator):
             self.configuration.append(RootRun(cmd, self.system))
         self.sudo_descriptor = True
 
-    def install(self, app_id: str, options: list[Option] = None):
-        self.configuration.append(self.__provider.install(app_id, options))
+    def install(self, app_id: str, options: list[Option] = None, head_options: list[Option] = None):
+        self.configuration.append(
+            self.__provider.install(app_id, options, head_options))
 
-    def remove(self, app_id: str, options: list[Option] = None):
-        self.configuration.append(self.__provider.remove(app_id, options))
+    def remove(self, app_id: str, options: list[Option] = None, head_options: list[Option] = None):
+        self.configuration.append(
+            self.__provider.remove(app_id, options, head_options))
 
-    def update(self, app_id: str = None, options: list[Option] = None):
-        self.configuration.append(self.__provider.update(app_id, options))
+    def update(self, app_id: str = None, options: list[Option] = None, head_options: list[Option] = None):
+        self.configuration.append(
+            self.__provider.update(app_id, options, head_options))
 
-    def purge(self, app_id: str = None, options: list[Option] = None):
-        self.configuration.append(self.__provider.purge(app_id, options))
+    def purge(self, app_id: str = None, options: list[Option] = None, head_options: list[Option] = None):
+        self.configuration.append(
+            self.__provider.purge(app_id, options, head_options))
 
     
 

@@ -56,16 +56,22 @@ Manager.Operation.option(args)
 cnf = Configurator()
 #print(cnf.system)
 #cnf.run('ls -a /')
+
+# Test flatpak configurations
 cnf.flatpak.install('org.gabmus.hydrapaper', [Flatpak.Install.subpath(Path('/usr/bin/')), Flatpak.Install.user()])
 cnf.flatpak.remove('org.gabmus.hydrapaper', [Flatpak.Uninstall.user()])
 cnf.flatpak.update()
 cnf.flatpak.add_repo('flathub', 'https://flathub.org/repo/flathub.flatpakrepo')
 cnf.flatpak.remove_repo('flathub')
 cnf.flatpak.purge('org.gabmus.hydrapaper')
-cnf.flatpak.add_cmd(Flatpak.Config(), [Flatpak.Config.user()])
-""" cnf.flatpak.remove('org.gabmus.hydrapaper')
-cnf.ubuntu.gnome.test('TEST!') """
+cnf.flatpak.build_cmd(Flatpak.Config(), [Flatpak.Config.user()], head_options=[Flatpak.verbose()])
 cnf.flatpak.install('org.gabmus.hydrapaper')
+
+# Test base configurations
+cnf.install('gimp')
+cnf.update()
+
+
 """ cnf.flatpak.update() """
 #cnf.run('ls -a /')
 #cnf.sudo.run('ls -a /')

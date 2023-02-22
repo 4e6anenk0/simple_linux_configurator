@@ -19,7 +19,6 @@ class Option:
         if settings_par == 'True':
             self.equal = '='
         elif settings_par == 'False':
-            
             self.equal = ' '
         else:
             logger.error(
@@ -62,11 +61,13 @@ class Operation:
                  parent_label: str,
                  operation: str,
                  operation_alias: str = None,
-                 default_options: str = '') -> None:
+                 default_options: str = '',
+                 default_head_options: str = '') -> None:
         self.parent_label = parent_label
         self.operation = operation
         self.alias = operation_alias
         self.default_options = default_options
+        self.default_head_options = default_head_options
 
     def _represent_options(self, options: list[Option]) -> str:
         if options:
@@ -102,6 +103,7 @@ class Operation:
         represent_head_options = self._represent_options(head_options)
         
         build_cmd = [self.parent_label]
+        build_cmd.append(self.default_head_options)
         build_cmd.extend(represent_head_options)
         build_cmd.append(self.operation)
         build_cmd.append(self.default_options)

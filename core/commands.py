@@ -24,6 +24,27 @@ f'The [{self.cmd}] command is running...'
 Command execution failed!
 '''
 
+
+class ValidatedCmd:
+    def __init__(self, cmd: str) -> None:
+        self.__cmd = self.check_valid(cmd)
+        self.black_list = ()
+
+    @property
+    def cmd(self):
+        return self.__cmd
+
+    @cmd.setter
+    def cmd(self, cmd: str):
+        try:
+            self.__cmd = self.check_valid(cmd)
+        except:
+            logger.warning(
+                f'Cannot set a value for a variable because the value did not pass validation!')
+
+    def check_valid(self, cmd: str):
+        pass
+
 class TemplateMixin:
 
     def run_implementation(self):
@@ -181,7 +202,9 @@ class BaseProvider:
 
     @classmethod
     def prepare(cls, *params: str) -> str:
-        '''A method that allows concatenate arguments into a common string'''
+        '''A method that allows concatenate arguments into a common string. 
+        A single string argument must be passed to the final call to the wrapped package manager method.
+        This method helps on the side of client functions that have expanded parameter declarations'''
         list_par = [arg for arg in params]
         str_par = " ".join(list_par)
         return str_par
@@ -202,87 +225,44 @@ class ManagerProvider(BaseProvider):
     def manager(self):
         return self.__manager
 
-    def get_cmd(self, method_name: str, pre_msg: str, err_msg: str, arg: str = None, options: list[Option] = None) -> ProvidedCmd:
+    def get_cmd(self, method_name: str, pre_msg: str, err_msg: str, arg: str = None, options: list[Option] = None, head_options: list[Option] = None) -> ProvidedCmd:
         '''Allows get a command by named id from the required package manager'''
         try:
             method = getattr(self.__manager, method_name)
             if callable(method):
-                cmd = method(arg, options)
+                cmd = method(arg, options, head_options)
                 return ProvidedCmd(cmd, self._system, pre_msg, err_msg, self._silent)
         except:
             raise Exception('Failed to get command with manager method!')
 
-    def install(self, arg: str, options: list[Option] = None):
+    def install(self, arg: str, options: list[Option] = None, head_options: list[Option] = None):
         pre_msg = f'Trying to install the program: {arg}'
         err_msg = f'The {arg} failed to install!'
-        return self.get_cmd('install', pre_msg, err_msg, arg, options)
+        return self.get_cmd('install', pre_msg, err_msg, arg, options, head_options)
 
-    def remove(self, arg: str, options: list[Option] = None):
+    def remove(self, arg: str, options: list[Option] = None, head_options: list[Option] = None):
         pre_msg = f'Trying to remove the program: {arg}'
         err_msg = f'The {arg} failed to remove!'
-        return self.get_cmd('remove', pre_msg, err_msg, arg, options)
+        return self.get_cmd('remove', pre_msg, err_msg, arg, options, head_options)
 
-    def update(self, arg: str = None, options: list[Option] = None):
+    def update(self, arg: str = None, options: list[Option] = None, head_options: list[Option] = None):
         pre_msg = f'Trying to update apps...'
         err_msg = f'The failed to update!'
-        return self.get_cmd('update', pre_msg, err_msg, arg, options=options)
+        return self.get_cmd('update', pre_msg, err_msg, arg, options, head_options)
 
-    def add_repo(self, arg: str, options: list[Option] = None):
+    def add_repo(self, arg: str, options: list[Option] = None, head_options: list[Option] = None):
         pre_msg = f'Trying to add a repository {arg}'
         err_msg = 'Failed to add repository'
-        return self.get_cmd('add_repo', pre_msg, err_msg, arg, options)
+        return self.get_cmd('add_repo', pre_msg, err_msg, arg, options, head_options)
 
-    def remove_repo(self, arg: str, options: list[Option] = None):
+    def remove_repo(self, arg: str, options: list[Option] = None, head_options: list[Option] = None):
         pre_msg = f'Trying to remove a repository {arg}'
         err_msg = 'Failed to remove repository'
-        return self.get_cmd('remove_repo', pre_msg, err_msg, arg, options)
+        return self.get_cmd('remove_repo', pre_msg, err_msg, arg, options, head_options)
 
-    def purge(self, arg: str, options: list[Option] = None):
+    def purge(self, arg: str, options: list[Option] = None, head_options: list[Option] = None):
         pre_msg = f'Trying to purge the program: {arg}'
         err_msg = f'The {arg} failed to purge!'
-        return self.get_cmd('purge', pre_msg, err_msg, arg, options)
+        return self.get_cmd('purge', pre_msg, err_msg, arg, options, head_options)
 
     
-
-
-
-""" class ManagerInstall(BaseCmd, TemplateForPkgManagerMixin):
-    def __init__(self, app_id: str, system: BaseSystem, manager: UniversalManager = None, silent: bool = False):
-        if not manager:
-            self.manager = system.manager
-        else: 
-            self.manager = manager
-        self.system = system 
-        self.app_id = app_id
-        self.silent = silent
-        super().__init__(self.manager.install(app_id))
-    
-    def apply(self):
-        self.template(
-            self.cmd, pre=f'Trying to install the program: {self.app_id}', err=f'The {self.app_id} failed to install!')
-
-
-class ManagerRemove(BaseCmd, TemplateForPkgManagerMixin):
-    def __init__(self, app_id: str, system: BaseSystem, manager: UniversalManager = None, silent: bool = False):
-        self.manager = manager
-        self.system = system
-        self.app_id = app_id
-        self.silent = silent
-        super().__init__(self.manager.remove(app_id))
-
-    def apply(self):
-        self.template(
-            self.cmd, pre=f'Trying to remove the program: {self.app_id}', err=f'The {self.app_id} failed to remove!')
-
-
-class Remove(BaseCmd, TemplateForManagerInstallMixin):
-    def __init__(self, app_id: str, manager: UniversalManager, system: BaseSystem, silent = False):
-        self.manager = manager
-        self.system = system
-        self.app_id = app_id
-        self.silent = silent
-        super().__init__(self.manager.remove(app_id=app_id))
-
-    def run_implementation(self):
-        password = self.system
- """

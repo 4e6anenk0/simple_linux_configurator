@@ -5,25 +5,7 @@ import shlex
 logger = log.get_logger(__name__)
 
 
-class ValidatedCmd:
-    def __init__(self) -> None:
-        self.__cmd = None
-        self.black_list = ()
 
-    @property
-    def cmd(self):
-        return self.__cmd
-
-    @cmd.setter
-    def cmd(self, cmd: str):
-        try:
-            self.__cmd = self.check_valid(cmd)
-        except:
-            logger.warning(
-                f'Cannot set a value for a variable because the value did not pass validation!')
-
-    def check_valid(self, cmd: str):
-        pass
 
 class BaseCmd:
     def __init__(self, cmd: str):
